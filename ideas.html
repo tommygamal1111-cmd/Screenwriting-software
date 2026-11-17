@@ -1,0 +1,2187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StoryNode Studio | لوحة الأفكار والربط السينمائي</title>
+
+  <!-- Google Fonts: Cairo & Tajawal -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+
+  <!-- FontAwesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & CINEMATIC DARK PALETTE
+       ========================================================================== */
+    :root {
+      --bg-app: #121212;
+      --bg-surface: #1E1E1E;
+      --bg-elevated: #262626;
+      --bg-input: #151515;
+      --border-subtle: #303030;
+      --border-hover: #484848;
+
+      --accent-gold: #F59E0B;
+      --accent-gold-hover: #D97706;
+      --accent-gold-soft: rgba(245, 158, 11, 0.15);
+
+      --accent-red: #E50914;
+      --accent-red-soft: rgba(229, 9, 20, 0.16);
+
+      --accent-blue: #3B82F6;
+      --accent-emerald: #10B981;
+      --accent-purple: #8B5CF6;
+
+      --text-primary: #ECECEC;
+      --text-secondary: #A3A3A3;
+      --text-muted: #737373;
+
+      --ui-font: 'Cairo', 'Tajawal', sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-node: 0 12px 32px rgba(0, 0, 0, 0.55);
+      --shadow-floating: 0 16px 40px rgba(0, 0, 0, 0.65);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      font-family: var(--ui-font);
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ==========================================================================
+       2. TOP STUDIO HEADER BAR
+       ========================================================================== */
+    .studio-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 62px;
+      background: rgba(20, 20, 20, 0.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      gap: 12px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(229, 9, 20, 0.15));
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .project-title-wrap {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .project-title-input {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: var(--ui-font);
+      font-size: 1.05rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      width: 240px;
+      max-width: 34vw;
+      transition: all 0.2s;
+    }
+
+    .project-title-input:hover,
+    .project-title-input:focus {
+      background: var(--bg-surface);
+      border-color: var(--accent-gold);
+      outline: none;
+    }
+
+    .autosave-badge {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      padding-inline-start: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .autosave-badge i {
+      color: var(--accent-emerald);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-family: var(--ui-font);
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-hover));
+      color: #121212;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+    }
+    .btn-gold:hover {
+      background: linear-gradient(135deg, #FBBF24, var(--accent-gold));
+    }
+
+    .btn-surface {
+      background: var(--bg-elevated);
+      border-color: var(--border-subtle);
+      color: var(--text-primary);
+    }
+    .btn-surface:hover {
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+
+    .btn-danger-soft {
+      background: var(--accent-red-soft);
+      border-color: rgba(229, 9, 20, 0.35);
+      color: #FF6B73;
+    }
+    .btn-danger-soft:hover {
+      background: var(--accent-red);
+      color: #FFF;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+    }
+
+    /* ==========================================================================
+       3. FLOATING NODE CREATION DOCK (TOP-CENTER)
+       ========================================================================== */
+    .creation-dock {
+      position: fixed;
+      top: 76px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 90;
+      background: rgba(26, 26, 26, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow-floating);
+      max-width: 96vw;
+      overflow-x: auto;
+    }
+
+    .dock-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-primary);
+      font-family: var(--ui-font);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .dock-btn:hover {
+      background: var(--bg-elevated);
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+
+    .dock-btn .dot-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+    }
+
+    .dock-btn[data-add-type="story"] .dot-icon { background: rgba(245, 158, 11, 0.2); color: var(--accent-gold); }
+    .dock-btn[data-add-type="character"] .dot-icon { background: rgba(59, 130, 246, 0.2); color: #60A5FA; }
+    .dock-btn[data-add-type="scene"] .dot-icon { background: rgba(229, 9, 20, 0.2); color: #FF6B73; }
+    .dock-btn[data-add-type="image"] .dot-icon { background: rgba(16, 185, 129, 0.2); color: #34D399; }
+    .dock-btn[data-add-type="note"] .dot-icon { background: rgba(139, 92, 246, 0.2); color: #A78BFA; }
+
+    .dock-divider {
+      width: 1px;
+      height: 22px;
+      background: var(--border-subtle);
+      margin: 0 2px;
+    }
+
+    /* ==========================================================================
+       4. INFINITE INTERACTIVE CANVAS & SVG CONNECTIONS LAYER
+       ========================================================================== */
+    .canvas-viewport {
+      position: fixed;
+      inset: 0;
+      top: 62px;
+      overflow: hidden;
+      cursor: grab;
+      background-color: #121212;
+      background-image: radial-gradient(#2C2C2C 1.35px, transparent 1.35px);
+      background-size: 26px 26px;
+      touch-action: none;
+    }
+
+    .canvas-viewport.panning {
+      cursor: grabbing;
+    }
+
+    .canvas-world {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    /* SVG Connection Layer */
+    .connections-svg {
+      position: absolute;
+      top: -10000px;
+      left: -10000px;
+      width: 20000px;
+      height: 20000px;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 1;
+    }
+
+    .connection-group {
+      pointer-events: visibleStroke;
+      cursor: pointer;
+    }
+
+    .connection-hit-path {
+      fill: none;
+      stroke: transparent;
+      stroke-width: 18px;
+    }
+
+    .connection-visible-path {
+      fill: none;
+      stroke: #6E6E77;
+      stroke-width: 2.5px;
+      transition: stroke 0.2s, stroke-width 0.2s;
+    }
+
+    .connection-group:hover .connection-visible-path,
+    .connection-group.selected .connection-visible-path {
+      stroke: var(--accent-gold);
+      stroke-width: 3.5px;
+    }
+
+    .connection-draft-path {
+      fill: none;
+      stroke: var(--accent-gold);
+      stroke-width: 2.5px;
+      stroke-dasharray: 6 6;
+      pointer-events: none;
+    }
+
+    /* Arrow Label Pill on SVG */
+    .edge-label-pill {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      background: #222226;
+      border: 1px solid #3E3E46;
+      color: var(--text-primary);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 5;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .edge-label-pill:hover {
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+      transform: translate(-50%, -50%) scale(1.06);
+    }
+
+    /* ==========================================================================
+       5. NODE CARDS (STORY, CHARACTER, SCENE, IMAGE, NOTE)
+       ========================================================================== */
+    .nodes-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+    }
+
+    .canvas-node {
+      position: absolute;
+      width: 290px;
+      min-height: 140px;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-node);
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      user-select: text;
+    }
+
+    .canvas-node:hover {
+      border-color: #4B4B55;
+    }
+
+    .canvas-node.selected {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.22), var(--shadow-node);
+      z-index: 30 !important;
+    }
+
+    /* Node Type Top Accent Strip */
+    .canvas-node[data-type="story"] { border-top: 4px solid var(--accent-gold); }
+    .canvas-node[data-type="character"] { border-top: 4px solid var(--accent-blue); }
+    .canvas-node[data-type="scene"] { border-top: 4px solid var(--accent-red); }
+    .canvas-node[data-type="image"] { border-top: 4px solid var(--accent-emerald); }
+    .canvas-node[data-type="note"] {
+      border-top: 4px solid var(--accent-purple);
+      background: #23202E;
+      width: 245px;
+    }
+
+    /* Node Drag Header */
+    .node-header {
+      padding: 9px 12px;
+      background: rgba(0, 0, 0, 0.22);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: grab;
+      border-radius: 10px 10px 0 0;
+      user-select: none;
+    }
+
+    .node-header:active {
+      cursor: grabbing;
+    }
+
+    .node-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+
+    .canvas-node[data-type="story"] .node-type-badge { color: var(--accent-gold); }
+    .canvas-node[data-type="character"] .node-type-badge { color: #60A5FA; }
+    .canvas-node[data-type="scene"] .node-type-badge { color: #FF6B73; }
+    .canvas-node[data-type="image"] .node-type-badge { color: #34D399; }
+    .canvas-node[data-type="note"] .node-type-badge { color: #A78BFA; }
+
+    .node-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .node-mini-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.76rem;
+      transition: all 0.15s;
+    }
+
+    .node-mini-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: var(--accent-gold);
+    }
+
+    .node-mini-btn.del:hover {
+      background: rgba(229, 9, 20, 0.2);
+      color: #FF6B73;
+    }
+
+    /* Node Body */
+    .node-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      flex: 1;
+    }
+
+    .node-title-input {
+      width: 100%;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: var(--ui-font);
+      font-size: 0.98rem;
+      font-weight: 800;
+      padding: 4px 6px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .node-title-input:hover,
+    .node-title-input:focus {
+      background: var(--bg-input);
+      border-color: var(--border-subtle);
+      outline: none;
+    }
+
+    .node-role-select {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-family: var(--ui-font);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 5px 8px;
+    }
+
+    .node-role-select:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+    }
+
+    .node-textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-family: var(--ui-font);
+      font-size: 0.84rem;
+      line-height: 1.5;
+      padding: 8px 10px;
+      resize: vertical;
+      min-height: 68px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .node-textarea:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+      color: var(--text-primary);
+    }
+
+    /* Image Upload Area inside Node */
+    .node-image-box {
+      position: relative;
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #141414;
+      border: 1px dashed #383838;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 110px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .node-image-box:hover {
+      border-color: var(--accent-gold);
+    }
+
+    .node-image-box.has-image {
+      border-style: solid;
+      border-color: #2E2E2E;
+      min-height: auto;
+    }
+
+    .node-image-box img {
+      width: 100%;
+      max-height: 210px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .node-image-placeholder {
+      padding: 16px 10px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .node-image-placeholder i {
+      font-size: 1.3rem;
+      color: var(--accent-gold);
+      opacity: 0.85;
+    }
+
+    .remove-node-img-btn {
+      position: absolute;
+      top: 6px;
+      inset-inline-end: 6px;
+      background: rgba(18, 18, 18, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #FF6B73;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+
+    .remove-node-img-btn:hover {
+      background: var(--accent-red);
+      color: #FFF;
+    }
+
+    /* ==========================================================================
+       6. CONNECTION PORTS (HANDLES ON 4 SIDES OF EACH NODE)
+       ========================================================================== */
+    .node-port {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #262626;
+      border: 2.5px solid var(--accent-gold);
+      z-index: 20;
+      cursor: crosshair;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 0.15s ease, transform 0.15s ease, background 0.15s ease;
+    }
+
+    .canvas-node:hover .node-port,
+    .canvas-node.selected .node-port,
+    .canvas-viewport.connecting-mode .node-port {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .node-port:hover {
+      background: var(--accent-gold);
+      transform: scale(1.3) !important;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.75);
+    }
+
+    .node-port[data-port="top"] { top: -7px; left: 50%; margin-left: -7px; }
+    .node-port[data-port="bottom"] { bottom: -7px; left: 50%; margin-left: -7px; }
+    .node-port[data-port="left"] { left: -7px; top: 50%; margin-top: -7px; }
+    .node-port[data-port="right"] { right: -7px; top: 50%; margin-top: -7px; }
+
+    /* ==========================================================================
+       7. BOTTOM CONTROLS (ZOOM BAR, MINIMAP / STATS, HELP)
+       ========================================================================== */
+    .zoom-controls-bar {
+      position: fixed;
+      bottom: 20px;
+      inset-inline-start: 20px;
+      z-index: 90;
+      background: rgba(24, 24, 24, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: var(--shadow-floating);
+    }
+
+    .zoom-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .zoom-btn:hover {
+      background: var(--bg-elevated);
+      color: var(--accent-gold);
+    }
+
+    .zoom-level-text {
+      min-width: 52px;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      cursor: pointer;
+    }
+
+    /* Bottom-Right Stats & Shortcuts Pill */
+    .canvas-status-pill {
+      position: fixed;
+      bottom: 20px;
+      inset-inline-end: 20px;
+      z-index: 90;
+      background: rgba(24, 24, 24, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-floating);
+    }
+
+    .canvas-status-pill strong {
+      color: var(--accent-gold);
+    }
+
+    /* ==========================================================================
+       8. EDGE / ARROW EDITOR POPOVER MODAL & TOASTS
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(5px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.hidden {
+      display: none;
+    }
+
+    .modal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 420px;
+      padding: 22px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-title {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.84rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text-primary);
+      font-family: var(--ui-font);
+      font-size: 0.9rem;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+    }
+
+    .quick-rel-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .rel-chip {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-family: var(--ui-font);
+      cursor: pointer;
+    }
+
+    .rel-chip:hover {
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+
+    .modal-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 72px;
+      inset-inline-end: 20px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #222226;
+      border: 1px solid var(--border-subtle);
+      border-inline-start: 4px solid var(--accent-gold);
+      color: var(--text-primary);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      animation: slideUp 0.22s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .hide-mobile {
+        display: none;
+      }
+      .project-title-input {
+        width: 140px;
+      }
+      .canvas-status-pill {
+        display: none;
+      }
+    }
+
+    .link-btn-header-actions {
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hidden File Inputs -->
+  <input type="file" id="jsonImportInput" accept=".json,application/json" style="display: none;" />
+  <input type="file" id="nodeImageInput" accept="image/*" style="display: none;" />
+
+  <!-- ========================================================================
+       1. TOP STUDIO HEADER BAR
+       ======================================================================== -->
+  <header class="studio-header">
+    <div class="brand-section">
+      <div class="brand-logo" title="StoryNode Studio">
+        <i class="fa-solid fa-diagram-project"></i>
+      </div>
+      <div class="project-title-wrap">
+        <input
+          type="text"
+          id="projectTitleInput"
+          class="project-title-input"
+          value="مخطط القصة والسيناريو"
+          aria-label="Project Title"
+        />
+        <span class="autosave-badge">
+          <i class="fa-solid fa-circle-check"></i>
+          <span data-i18n="autoSaved">محفوظ تلقائياً</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <a href='index.html' class="link-btn-header-actions">
+        <button type="button" class="btn btn-surface" id="loadSampleBtn" title="تحميل نموذج توضيحي">
+          <i class="fa-solid fa-house"></i>
+          <span class="hide-mobile">Home</span>
+        </button>
+      </a>
+
+      <button type="button" class="btn btn-surface" id="loadSampleBtn" title="تحميل نموذج توضيحي">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span class="hide-mobile" data-i18n="sampleBtn">نموذج جاهز</span>
+      </button>
+
+      <button type="button" class="btn btn-gold" id="exportJsonBtn" title="حفظ اللوحة بالكامل كملف JSON">
+        <i class="fa-solid fa-download"></i>
+        <span data-i18n="exportJson">حفظ JSON</span>
+      </button>
+
+      <button type="button" class="btn btn-surface" id="importJsonBtn" title="استيراد ملف JSON محفوظ">
+        <i class="fa-solid fa-folder-open"></i>
+        <span data-i18n="importJson">استيراد JSON</span>
+      </button>
+
+      <button type="button" class="btn btn-surface btn-icon" id="langToggleBtn" title="تغيير اللغة والاتجاه (AR/EN)">
+        <i class="fa-solid fa-language"></i>
+      </button>
+
+      <button type="button" class="btn btn-danger-soft btn-icon" id="clearCanvasBtn" title="مسح اللوحة">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       2. FLOATING NODE CREATION DOCK
+       ======================================================================== -->
+  <div class="creation-dock" role="toolbar" aria-label="Add Canvas Cards">
+    <button type="button" class="dock-btn" data-add-type="story">
+      <span class="dot-icon"><i class="fa-solid fa-book-open"></i></span>
+      <span data-i18n="addStory">قصة / فكرة</span>
+    </button>
+
+    <button type="button" class="dock-btn" data-add-type="character">
+      <span class="dot-icon"><i class="fa-solid fa-user-astronaut"></i></span>
+      <span data-i18n="addCharacter">شخصية</span>
+    </button>
+
+    <button type="button" class="dock-btn" data-add-type="scene">
+      <span class="dot-icon"><i class="fa-solid fa-clapperboard"></i></span>
+      <span data-i18n="addScene">مشهد / موقع</span>
+    </button>
+
+    <button type="button" class="dock-btn" data-add-type="image">
+      <span class="dot-icon"><i class="fa-solid fa-image"></i></span>
+      <span data-i18n="addImage">صورة مرجعية</span>
+    </button>
+
+    <button type="button" class="dock-btn" data-add-type="note">
+      <span class="dot-icon"><i class="fa-solid fa-note-sticky"></i></span>
+      <span data-i18n="addNote">ملاحظة</span>
+    </button>
+  </div>
+
+  <!-- ========================================================================
+       3. INFINITE INTERACTIVE CANVAS WORKSPACE
+       ======================================================================== -->
+  <main id="canvasViewport" class="canvas-viewport">
+    <div id="canvasWorld" class="canvas-world">
+      <!-- SVG Arrows Layer -->
+      <svg id="connectionsSvg" class="connections-svg">
+        <defs>
+          <marker id="arrow-default" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#6E6E77" />
+          </marker>
+          <marker id="arrow-gold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#F59E0B" />
+          </marker>
+        </defs>
+        <g id="edgesGroup"></g>
+        <path id="draftConnectionPath" class="connection-draft-path" d="" style="display: none;" />
+      </svg>
+
+      <!-- Edge Labels Layer -->
+      <div id="edgeLabelsLayer"></div>
+
+      <!-- Draggable Nodes Layer -->
+      <div id="nodesLayer" class="nodes-layer"></div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       4. BOTTOM ZOOM & STATUS CONTROLS
+       ======================================================================== -->
+  <div class="zoom-controls-bar">
+    <button type="button" class="zoom-btn" id="zoomOutBtn" title="تصغير (-)">
+      <i class="fa-solid fa-minus"></i>
+    </button>
+    <span class="zoom-level-text" id="zoomLevelDisplay" title="إعادة الضبط إلى 100%">100%</span>
+    <button type="button" class="zoom-btn" id="zoomInBtn" title="تكبير (+)">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+    <button type="button" class="zoom-btn" id="fitScreenBtn" title="احتواء جميع البطاقات في الشاشة">
+      <i class="fa-solid fa-expand"></i>
+    </button>
+  </div>
+
+  <div class="canvas-status-pill">
+    <span><i class="fa-solid fa-layer-group"></i> <span data-i18n="statNodes">البطاقات:</span> <strong id="nodeCountStat">0</strong></span>
+    <span><i class="fa-solid fa-share-nodes"></i> <span data-i18n="statLinks">الروابط:</span> <strong id="edgeCountStat">0</strong></span>
+    <span style="color: var(--text-muted);" data-i18n="hintTip">اسحب الدوائر الذهبية حول البطاقة لرسم سهم ربط • انقر مرتين لإضافة بطاقة</span>
+  </div>
+
+  <!-- ========================================================================
+       5. CONNECTION / ARROW EDIT MODAL
+       ======================================================================== -->
+  <div id="edgeEditModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span><i class="fa-solid fa-bezier-curve"></i> <span data-i18n="editArrowTitle">تعديل رابط السهم</span></span>
+        <button type="button" class="node-mini-btn" id="closeEdgeModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="form-group">
+        <label for="edgeLabelInput" data-i18n="arrowLabel">وصف العلاقة على السهم (اختياري)</label>
+        <input type="text" id="edgeLabelInput" class="form-input" placeholder="مثال: حليف، عدو، يؤدي إلى، فلاش باك..." />
+        <div class="quick-rel-chips">
+          <button type="button" class="rel-chip" data-rel="يؤدي إلى">يؤدي إلى</button>
+          <button type="button" class="rel-chip" data-rel="حليف">حليف</button>
+          <button type="button" class="rel-chip" data-rel="عدو / صراع">عدو / صراع</button>
+          <button type="button" class="rel-chip" data-rel="فلاش باك">فلاش باك</button>
+          <button type="button" class="rel-chip" data-rel="سر خفي">سر خفي</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="edgeStyleSelect" data-i18n="arrowStyle">نمط الخط</label>
+        <select id="edgeStyleSelect" class="form-input">
+          <option value="solid">خط متصل (Solid)</option>
+          <option value="dashed">خط متقطع (Dashed)</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger-soft" id="deleteEdgeBtn">
+          <i class="fa-solid fa-trash"></i> <span data-i18n="deleteArrow">حذف السهم</span>
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-surface" id="cancelEdgeBtn" data-i18n="cancel">إلغاء</button>
+          <button type="button" class="btn btn-gold" id="saveEdgeBtn" data-i18n="save">حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- ========================================================================
+       6. APPLICATION JAVASCRIPT (INFINITE CANVAS, NODES, SVG ARROWS, JSON)
+       ======================================================================== -->
+  <script>
+    (() => {
+      'use strict';
+
+      const STORAGE_KEY = 'storynode_studio_canvas_v1';
+      const SVG_OFFSET = 10000; // Matches -10000px view offset of #connectionsSvg
+
+      /* --------------------------------------------------------------------
+         1. I18N & NODE METADATA
+         -------------------------------------------------------------------- */
+      const I18N = {
+        ar: {
+          autoSaved: 'محفوظ تلقائياً',
+          sampleBtn: 'نموذج جاهز',
+          exportJson: 'حفظ JSON',
+          importJson: 'استيراد JSON',
+          addStory: 'قصة / فكرة',
+          addCharacter: 'شخصية',
+          addScene: 'مشهد / موقع',
+          addImage: 'صورة مرجعية',
+          addNote: 'ملاحظة',
+          statNodes: 'البطاقات:',
+          statLinks: 'الروابط:',
+          hintTip: 'اسحب الدوائر الذهبية حول البطاقة لرسم سهم ربط • انقر مرتين لإضافة بطاقة',
+          editArrowTitle: 'تعديل رابط السهم',
+          arrowLabel: 'وصف العلاقة على السهم (اختياري)',
+          arrowStyle: 'نمط الخط',
+          deleteArrow: 'حذف السهم',
+          cancel: 'إلغاء',
+          save: 'حفظ'
+        },
+        en: {
+          autoSaved: 'Auto-saved',
+          sampleBtn: 'Sample Map',
+          exportJson: 'Export JSON',
+          importJson: 'Import JSON',
+          addStory: 'Story / Idea',
+          addCharacter: 'Character',
+          addScene: 'Scene / Location',
+          addImage: 'Reference Image',
+          addNote: 'Sticky Note',
+          statNodes: 'Cards:',
+          statLinks: 'Connections:',
+          hintTip: 'Drag gold ports on card edges to connect arrows • Double-click canvas to add card',
+          editArrowTitle: 'Edit Arrow Connection',
+          arrowLabel: 'Relationship Label (Optional)',
+          arrowStyle: 'Line Style',
+          deleteArrow: 'Delete Arrow',
+          cancel: 'Cancel',
+          save: 'Save'
+        }
+      };
+
+      const NODE_CONFIG = {
+        story: {
+          icon: 'fa-book-open',
+          labelAr: 'قصة / فكرة',
+          labelEn: 'Story / Idea',
+          titlePlaceholderAr: 'عنوان الفكرة أو الحبكة...',
+          titlePlaceholderEn: 'Plot or Concept Title...',
+          descPlaceholderAr: 'اكتب تفاصيل الفكرة، الصراع الرئيسي، أو تطور الأحداث...',
+          descPlaceholderEn: 'Write plot details, central conflict, or story arc...'
+        },
+        character: {
+          icon: 'fa-user-astronaut',
+          labelAr: 'بطاقة شخصية',
+          labelEn: 'Character',
+          titlePlaceholderAr: 'اسم الشخصية...',
+          titlePlaceholderEn: 'Character Name...',
+          descPlaceholderAr: 'الدوافع، الخلفية النفسية، ونقاط القوة والضعف...',
+          descPlaceholderEn: 'Motivations, backstory, strengths & flaws...'
+        },
+        scene: {
+          icon: 'fa-clapperboard',
+          labelAr: 'مشهد / موقع',
+          labelEn: 'Scene / Location',
+          titlePlaceholderAr: 'داخلي. المكان - ليل',
+          titlePlaceholderEn: 'INT. LOCATION - NIGHT',
+          descPlaceholderAr: 'وصف بصري للمشهد، الإضاءة، وحركة الكاميرا...',
+          descPlaceholderEn: 'Visual description, lighting, camera movement...'
+        },
+        image: {
+          icon: 'fa-image',
+          labelAr: 'صورة مرجعية',
+          labelEn: 'Reference Image',
+          titlePlaceholderAr: 'عنوان اللقطة أو المرجع البصري...',
+          titlePlaceholderEn: 'Moodboard / Shot Title...',
+          descPlaceholderAr: 'ملاحظات بصرية حول الألوان أو التكوين...',
+          descPlaceholderEn: 'Visual notes on color palette or framing...'
+        },
+        note: {
+          icon: 'fa-note-sticky',
+          labelAr: 'ملاحظة سريعة',
+          labelEn: 'Sticky Note',
+          titlePlaceholderAr: 'عنوان الملاحظة...',
+          titlePlaceholderEn: 'Note Title...',
+          descPlaceholderAr: 'دوّن فكرة سريعة أو تذكيراً هنا...',
+          descPlaceholderEn: 'Jot down a quick thought or reminder...'
+        }
+      };
+
+      /* --------------------------------------------------------------------
+         2. APPLICATION STATE
+         -------------------------------------------------------------------- */
+      let state = {
+        projectTitle: 'مخطط القصة والسيناريو',
+        lang: 'ar',
+        viewport: {
+          panX: 120,
+          panY: 140,
+          zoom: 1
+        },
+        nodes: [],
+        edges: []
+      };
+
+      let selectedNodeId = null;
+      let editingEdgeId = null;
+      let pendingImageNodeId = null;
+
+      // Interaction state
+      let isPanning = false;
+      let panStart = { x: 0, y: 0 };
+
+      let draggingNode = null;
+      let dragOffset = { x: 0, y: 0 };
+
+      let connectingFrom = null; // { nodeId, port }
+
+      /* --------------------------------------------------------------------
+         3. UTILITY FUNCTIONS
+         -------------------------------------------------------------------- */
+      function uid(prefix = 'id') {
+        return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function showToast(msg) {
+        const container = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        container.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = '0';
+          el.style.transition = 'opacity 0.25s';
+          setTimeout(() => el.remove(), 260);
+        }, 2600);
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (err) {
+          console.warn('LocalStorage quota warning:', err);
+        }
+        updateStats();
+      }
+
+      function loadSavedState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return false;
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.nodes) && Array.isArray(parsed.edges)) {
+            state = {
+              projectTitle: parsed.projectTitle || 'مخطط القصة والسيناريو',
+              lang: parsed.lang || 'ar',
+              viewport: {
+                panX: Number(parsed.viewport?.panX) || 120,
+                panY: Number(parsed.viewport?.panY) || 140,
+                zoom: Number(parsed.viewport?.zoom) || 1
+              },
+              nodes: parsed.nodes,
+              edges: parsed.edges
+            };
+            return true;
+          }
+        } catch (err) {
+          console.error('Failed to parse saved canvas state:', err);
+        }
+        return false;
+      }
+
+      function createSampleMap() {
+        const n1 = uid('node');
+        const n2 = uid('node');
+        const n3 = uid('node');
+        const n4 = uid('node');
+
+        state = {
+          projectTitle: 'مشروع فيلم: صدى الإسكندرية',
+          lang: state.lang || 'ar',
+          viewport: { panX: 80, panY: 140, zoom: 0.95 },
+          nodes: [
+            {
+              id: n1,
+              type: 'story',
+              x: 60,
+              y: 40,
+              title: 'الفكرة الرئيسية (Logline)',
+              role: '',
+              content: 'مُرمِّم أفلام قديمة يكتشف بكرة سينمائية مفقودة من السبعينيات تحتوي على دليل يبرئ والده من جريمة غامضة.',
+              imageBase64: ''
+            },
+            {
+              id: n2,
+              type: 'character',
+              x: 440,
+              y: 20,
+              title: 'آدم الشناوي',
+              role: 'protagonist',
+              content: 'البطل (38 سنة): شغوف بالأرشيف السينمائي، انطوائي لكنه عنيد عندما يتعلق الأمر بالحقيقة.',
+              imageBase64: ''
+            },
+            {
+              id: n3,
+              type: 'character',
+              x: 440,
+              y: 310,
+              title: 'المنتج فريد بك',
+              role: 'antagonist',
+              content: 'الخصم (62 سنة): أحد أباطرة الإنتاج القدامى، يسعى لشراء أو إتلاف البكرة بأي ثمن.',
+              imageBase64: ''
+            },
+            {
+              id: n4,
+              type: 'scene',
+              x: 820,
+              y: 150,
+              title: 'داخلي. دار سينما مهجورة - ليل',
+              role: '',
+              content: 'أشعة ضوء تتسلل من شقوق السقف المنهار. آدم يعرض البكرة على الحائط المتهالك لأول مرة.',
+              imageBase64: ''
+            }
+          ],
+          edges: [
+            { id: uid('edge'), fromNode: n1, fromPort: 'right', toNode: n2, toPort: 'left', label: 'بطل القصة', style: 'solid' },
+            { id: uid('edge'), fromNode: n2, fromPort: 'bottom', toNode: n3, toPort: 'top', label: 'صراع مباشر', style: 'solid' },
+            { id: uid('edge'), fromNode: n2, fromPort: 'right', toNode: n4, toPort: 'left', label: 'يكتشف الحقيقة في', style: 'dashed' }
+          ]
+        };
+      }
+
+      /* --------------------------------------------------------------------
+         4. VIEWPORT PAN & ZOOM ENGINE
+         -------------------------------------------------------------------- */
+      const viewportEl = document.getElementById('canvasViewport');
+      const worldEl = document.getElementById('canvasWorld');
+
+      function applyViewportTransform() {
+        const { panX, panY, zoom } = state.viewport;
+        worldEl.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+
+        // Sync background dot-grid position & scale for authentic infinite feel
+        const gridSize = 26 * zoom;
+        viewportEl.style.backgroundSize = `${gridSize}px ${gridSize}px`;
+        viewportEl.style.backgroundPosition = `${panX}px ${panY}px`;
+
+        document.getElementById('zoomLevelDisplay').textContent = `${Math.round(zoom * 100)}%`;
+      }
+
+      function zoomAtPoint(newZoom, clientX, clientY) {
+        const clampedZoom = Math.min(2.2, Math.max(0.3, newZoom));
+        const rect = viewportEl.getBoundingClientRect();
+        const mouseX = clientX - rect.left;
+        const mouseY = clientY - rect.top;
+
+        const worldX = (mouseX - state.viewport.panX) / state.viewport.zoom;
+        const worldY = (mouseY - state.viewport.panY) / state.viewport.zoom;
+
+        state.viewport.zoom = clampedZoom;
+        state.viewport.panX = mouseX - worldX * clampedZoom;
+        state.viewport.panY = mouseY - worldY * clampedZoom;
+
+        applyViewportTransform();
+        saveState();
+      }
+
+      function fitAllNodesToScreen() {
+        if (state.nodes.length === 0) {
+          state.viewport = { panX: 120, panY: 140, zoom: 1 };
+          applyViewportTransform();
+          return;
+        }
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        state.nodes.forEach((n) => {
+          const el = document.querySelector(`.canvas-node[data-id="${n.id}"]`);
+          const w = el ? el.offsetWidth : 290;
+          const h = el ? el.offsetHeight : 200;
+          minX = Math.min(minX, n.x);
+          minY = Math.min(minY, n.y);
+          maxX = Math.max(maxX, n.x + w);
+          maxY = Math.max(maxY, n.y + h);
+        });
+
+        const rect = viewportEl.getBoundingClientRect();
+        const padding = 110;
+        const contentW = Math.max(200, maxX - minX);
+        const contentH = Math.max(200, maxY - minY);
+
+        const scaleX = (rect.width - padding * 2) / contentW;
+        const scaleY = (rect.height - padding * 2) / contentH;
+        const targetZoom = Math.min(1.15, Math.max(0.35, Math.min(scaleX, scaleY)));
+
+        state.viewport.zoom = targetZoom;
+        state.viewport.panX = (rect.width - contentW * targetZoom) / 2 - minX * targetZoom;
+        state.viewport.panY = (rect.height - contentH * targetZoom) / 2 - minY * targetZoom + 24;
+
+        applyViewportTransform();
+        saveState();
+      }
+
+      /* --------------------------------------------------------------------
+         5. IMAGE COMPRESSION (BASE64 FOR CLEAN JSON EXPORT)
+         -------------------------------------------------------------------- */
+      function compressImageFile(file, maxDim = 480, quality = 0.8) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              let { width, height } = img;
+              if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                } else {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      /* --------------------------------------------------------------------
+         6. RENDERING NODES & SVG BEZIER ARROWS
+         -------------------------------------------------------------------- */
+      function renderAll() {
+        document.getElementById('projectTitleInput').value = state.projectTitle;
+        applyLanguage(state.lang, false);
+        applyViewportTransform();
+        renderNodes();
+        renderEdges();
+        updateStats();
+      }
+
+      function renderNodes() {
+        const layer = document.getElementById('nodesLayer');
+        const lang = state.lang;
+
+        layer.innerHTML = state.nodes
+          .map((node) => {
+            const cfg = NODE_CONFIG[node.type] || NODE_CONFIG.story;
+            const badgeText = lang === 'ar' ? cfg.labelAr : cfg.labelEn;
+            const titlePh = lang === 'ar' ? cfg.titlePlaceholderAr : cfg.titlePlaceholderEn;
+            const descPh = lang === 'ar' ? cfg.descPlaceholderAr : cfg.descPlaceholderEn;
+            const isSelected = node.id === selectedNodeId;
+
+            const roleSelectorHtml =
+              node.type === 'character'
+                ? `
+                  <select class="node-role-select" data-field="role" data-id="${node.id}">
+                    <option value="protagonist" ${node.role === 'protagonist' ? 'selected' : ''}>${lang === 'ar' ? '⭐ بطل القصة (Protagonist)' : '⭐ Protagonist'}</option>
+                    <option value="antagonist" ${node.role === 'antagonist' ? 'selected' : ''}>${lang === 'ar' ? '🔥 خصم / شرير (Antagonist)' : '🔥 Antagonist'}</option>
+                    <option value="mentor" ${node.role === 'mentor' ? 'selected' : ''}>${lang === 'ar' ? '🧭 مرشد / داعم (Mentor)' : '🧭 Mentor'}</option>
+                    <option value="supporting" ${node.role === 'supporting' ? 'selected' : ''}>${lang === 'ar' ? '👤 شخصية ثانوية (Supporting)' : '👤 Supporting'}</option>
+                  </select>
+                `
+                : '';
+
+            const supportsImage = node.type === 'character' || node.type === 'scene' || node.type === 'image';
+            const imageSectionHtml = supportsImage
+              ? `
+                <div class="node-image-box ${node.imageBase64 ? 'has-image' : ''}" data-upload-img="${node.id}">
+                  ${
+                    node.imageBase64
+                      ? `
+                        <img src="${node.imageBase64}" alt="Node Visual" />
+                        <button type="button" class="remove-node-img-btn" data-remove-img="${node.id}" title="إزالة الصورة">
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      `
+                      : `
+                        <div class="node-image-placeholder">
+                          <i class="fa-solid fa-cloud-arrow-up"></i>
+                          <span>${lang === 'ar' ? 'اضغط لرفع صورة مرجعية' : 'Click to upload image'}</span>
+                        </div>
+                      `
+                  }
+                </div>
+              `
+              : '';
+
+            return `
+              <article
+                class="canvas-node ${isSelected ? 'selected' : ''}"
+                data-id="${node.id}"
+                data-type="${node.type}"
+                style="left: ${node.x}px; top: ${node.y}px;"
+              >
+                <!-- 4 Connection Handles -->
+                <div class="node-port" data-port="top" data-node="${node.id}" title="اسحب للربط"></div>
+                <div class="node-port" data-port="right" data-node="${node.id}" title="اسحب للربط"></div>
+                <div class="node-port" data-port="bottom" data-node="${node.id}" title="اسحب للربط"></div>
+                <div class="node-port" data-port="left" data-node="${node.id}" title="اسحب للربط"></div>
+
+                <div class="node-header" data-drag-handle="${node.id}">
+                  <span class="node-type-badge">
+                    <i class="fa-solid ${cfg.icon}"></i>
+                    <span>${badgeText}</span>
+                  </span>
+                  <div class="node-header-actions">
+                    <button type="button" class="node-mini-btn" data-duplicate="${node.id}" title="${lang === 'ar' ? 'تكرار البطاقة' : 'Duplicate'}">
+                      <i class="fa-regular fa-copy"></i>
+                    </button>
+                    <button type="button" class="node-mini-btn del" data-delete="${node.id}" title="${lang === 'ar' ? 'حذف البطاقة' : 'Delete'}">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="node-body">
+                  <input
+                    type="text"
+                    class="node-title-input"
+                    data-field="title"
+                    data-id="${node.id}"
+                    value="${escapeHtml(node.title)}"
+                    placeholder="${escapeHtml(titlePh)}"
+                  />
+                  ${roleSelectorHtml}
+                  ${imageSectionHtml}
+                  <textarea
+                    class="node-textarea"
+                    data-field="content"
+                    data-id="${node.id}"
+                    placeholder="${escapeHtml(descPh)}"
+                  >${escapeHtml(node.content)}</textarea>
+                </div>
+              </article>
+            `;
+          })
+          .join('');
+      }
+
+      function getPortWorldCoords(nodeId, port) {
+        const node = state.nodes.find((n) => n.id === nodeId);
+        if (!node) return { x: 0, y: 0 };
+
+        const el = document.querySelector(`.canvas-node[data-id="${nodeId}"]`);
+        const w = el ? el.offsetWidth : 290;
+        const h = el ? el.offsetHeight : 180;
+
+        switch (port) {
+          case 'top':
+            return { x: node.x + w / 2, y: node.y };
+          case 'bottom':
+            return { x: node.x + w / 2, y: node.y + h };
+          case 'left':
+            return { x: node.x, y: node.y + h / 2 };
+          case 'right':
+          default:
+            return { x: node.x + w, y: node.y + h / 2 };
+        }
+      }
+
+      function buildBezierPath(p1, port1, p2, port2) {
+        const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        const curveOffset = Math.min(140, Math.max(45, dist * 0.4));
+
+        const dirVec = {
+          top: { x: 0, y: -1 },
+          bottom: { x: 0, y: 1 },
+          left: { x: -1, y: 0 },
+          right: { x: 1, y: 0 }
+        };
+
+        const d1 = dirVec[port1] || { x: 1, y: 0 };
+        const d2 = dirVec[port2] || { x: -1, y: 0 };
+
+        const c1x = p1.x + d1.x * curveOffset + SVG_OFFSET;
+        const c1y = p1.y + d1.y * curveOffset + SVG_OFFSET;
+        const c2x = p2.x + d2.x * curveOffset + SVG_OFFSET;
+        const c2y = p2.y + d2.y * curveOffset + SVG_OFFSET;
+
+        const sx = p1.x + SVG_OFFSET;
+        const sy = p1.y + SVG_OFFSET;
+        const ex = p2.x + SVG_OFFSET;
+        const ey = p2.y + SVG_OFFSET;
+
+        // Midpoint on cubic bezier at t = 0.5 for label placement
+        const midX = 0.125 * p1.x + 0.375 * (p1.x + d1.x * curveOffset) + 0.375 * (p2.x + d2.x * curveOffset) + 0.125 * p2.x;
+        const midY = 0.125 * p1.y + 0.375 * (p1.y + d1.y * curveOffset) + 0.375 * (p2.y + d2.y * curveOffset) + 0.125 * p2.y;
+
+        return {
+          d: `M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}`,
+          midX,
+          midY
+        };
+      }
+
+      function renderEdges() {
+        const edgesGroup = document.getElementById('edgesGroup');
+        const labelsLayer = document.getElementById('edgeLabelsLayer');
+
+        // Clean orphan edges if any node was removed
+        const validIds = new Set(state.nodes.map((n) => n.id));
+        state.edges = state.edges.filter((e) => validIds.has(e.fromNode) && validIds.has(e.toNode));
+
+        let svgMarkup = '';
+        let labelsMarkup = '';
+
+        state.edges.forEach((edge) => {
+          const p1 = getPortWorldCoords(edge.fromNode, edge.fromPort);
+          const p2 = getPortWorldCoords(edge.toNode, edge.toPort);
+          const { d, midX, midY } = buildBezierPath(p1, edge.fromPort, p2, edge.toPort);
+          const dashAttr = edge.style === 'dashed' ? 'stroke-dasharray="7 6"' : '';
+          const isSelected = edge.id === editingEdgeId;
+
+          svgMarkup += `
+            <g class="connection-group ${isSelected ? 'selected' : ''}" data-edge-id="${edge.id}">
+              <path class="connection-hit-path" d="${d}" />
+              <path
+                class="connection-visible-path"
+                d="${d}"
+                ${dashAttr}
+                marker-end="url(#${isSelected ? 'arrow-gold' : 'arrow-default'})"
+              />
+            </g>
+          `;
+
+          if (edge.label && edge.label.trim() !== '') {
+            labelsMarkup += `
+              <div
+                class="edge-label-pill"
+                data-edge-id="${edge.id}"
+                style="left: ${midX}px; top: ${midY}px;"
+                title="انقر لتعديل الرابط"
+              >${escapeHtml(edge.label)}</div>
+            `;
+          }
+        });
+
+        edgesGroup.innerHTML = svgMarkup;
+        labelsLayer.innerHTML = labelsMarkup;
+        updateStats();
+      }
+
+      function updateStats() {
+        document.getElementById('nodeCountStat').textContent = state.nodes.length;
+        document.getElementById('edgeCountStat').textContent = state.edges.length;
+      }
+
+      /* --------------------------------------------------------------------
+         7. NODE & EDGE CRUD ACTIONS
+         -------------------------------------------------------------------- */
+      function addNode(type, customWorldPos = null) {
+        const rect = viewportEl.getBoundingClientRect();
+        const jitter = (Math.random() - 0.5) * 70;
+
+        const worldX = customWorldPos
+          ? customWorldPos.x
+          : (rect.width / 2 - state.viewport.panX) / state.viewport.zoom - 145 + jitter;
+        const worldY = customWorldPos
+          ? customWorldPos.y
+          : (rect.height / 2 - state.viewport.panY) / state.viewport.zoom - 90 + jitter;
+
+        const newNode = {
+          id: uid('node'),
+          type,
+          x: Math.round(worldX),
+          y: Math.round(worldY),
+          title: '',
+          role: type === 'character' ? 'protagonist' : '',
+          content: '',
+          imageBase64: ''
+        };
+
+        state.nodes.push(newNode);
+        selectedNodeId = newNode.id;
+        saveState();
+        renderNodes();
+        renderEdges();
+      }
+
+      function duplicateNode(nodeId) {
+        const orig = state.nodes.find((n) => n.id === nodeId);
+        if (!orig) return;
+
+        const copy = {
+          ...orig,
+          id: uid('node'),
+          x: orig.x + 36,
+          y: orig.y + 36
+        };
+
+        state.nodes.push(copy);
+        selectedNodeId = copy.id;
+        saveState();
+        renderNodes();
+        renderEdges();
+        showToast(state.lang === 'ar' ? 'تم تكرار البطاقة' : 'Card duplicated');
+      }
+
+      function deleteNode(nodeId) {
+        state.nodes = state.nodes.filter((n) => n.id !== nodeId);
+        state.edges = state.edges.filter((e) => e.fromNode !== nodeId && e.toNode !== nodeId);
+        if (selectedNodeId === nodeId) selectedNodeId = null;
+        saveState();
+        renderNodes();
+        renderEdges();
+      }
+
+      function openEdgeModal(edgeId) {
+        const edge = state.edges.find((e) => e.id === edgeId);
+        if (!edge) return;
+        editingEdgeId = edgeId;
+        document.getElementById('edgeLabelInput').value = edge.label || '';
+        document.getElementById('edgeStyleSelect').value = edge.style || 'solid';
+        document.getElementById('edgeEditModal').classList.remove('hidden');
+        renderEdges();
+        setTimeout(() => document.getElementById('edgeLabelInput').focus(), 40);
+      }
+
+      function closeEdgeModal() {
+        editingEdgeId = null;
+        document.getElementById('edgeEditModal').classList.add('hidden');
+        renderEdges();
+      }
+
+      /* --------------------------------------------------------------------
+         8. JSON EXPORT & IMPORT
+         -------------------------------------------------------------------- */
+      function exportJsonFile() {
+        const fileName = (state.projectTitle || 'story_canvas')
+          .trim()
+          .replace(/[<>:"/\\|?*]+/g, '_')
+          .replace(/\s+/g, '_');
+
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fileName}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast(state.lang === 'ar' ? 'تم حفظ المخطط كملف JSON بنجاح!' : 'Saved canvas as JSON!');
+      }
+
+      function importJsonFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            if (!parsed || !Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) {
+              throw new Error('Invalid JSON structure');
+            }
+            state = {
+              projectTitle: parsed.projectTitle || 'مخطط مستورد',
+              lang: parsed.lang || state.lang,
+              viewport: {
+                panX: Number(parsed.viewport?.panX) || 100,
+                panY: Number(parsed.viewport?.panY) || 120,
+                zoom: Number(parsed.viewport?.zoom) || 1
+              },
+              nodes: parsed.nodes,
+              edges: parsed.edges
+            };
+            saveState();
+            renderAll();
+            showToast(state.lang === 'ar' ? 'تم استيراد المخطط بنجاح!' : 'Imported JSON canvas!');
+          } catch (err) {
+            showToast(state.lang === 'ar' ? 'ملف JSON غير صالح!' : 'Invalid JSON file!');
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      /* --------------------------------------------------------------------
+         9. LANGUAGE TOGGLE
+         -------------------------------------------------------------------- */
+      function applyLanguage(lang, shouldSave = true) {
+        state.lang = lang;
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+        const dict = I18N[lang] || I18N.ar;
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+          const key = el.getAttribute('data-i18n');
+          if (dict[key]) el.textContent = dict[key];
+        });
+
+        if (shouldSave) {
+          saveState();
+          renderNodes();
+          renderEdges();
+        }
+      }
+
+      /* --------------------------------------------------------------------
+         10. EVENT LISTENERS (DRAG, PAN, ZOOM, CONNECT, INPUTS)
+         -------------------------------------------------------------------- */
+      function initEvents() {
+        // Project Title Input
+        document.getElementById('projectTitleInput').addEventListener('input', (e) => {
+          state.projectTitle = e.target.value;
+          saveState();
+        });
+
+        // Floating Dock Add Card Buttons
+        document.querySelectorAll('[data-add-type]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            addNode(btn.getAttribute('data-add-type'));
+          });
+        });
+
+        // Header Buttons
+        document.getElementById('exportJsonBtn').addEventListener('click', exportJsonFile);
+
+        const jsonInput = document.getElementById('jsonImportInput');
+        document.getElementById('importJsonBtn').addEventListener('click', () => {
+          jsonInput.value = '';
+          jsonInput.click();
+        });
+        jsonInput.addEventListener('change', (e) => {
+          if (e.target.files?.[0]) importJsonFile(e.target.files[0]);
+        });
+
+        document.getElementById('loadSampleBtn').addEventListener('click', () => {
+          createSampleMap();
+          saveState();
+          renderAll();
+          showToast(state.lang === 'ar' ? 'تم تحميل النموذج التوضيحي' : 'Loaded sample story map');
+        });
+
+        document.getElementById('langToggleBtn').addEventListener('click', () => {
+          applyLanguage(state.lang === 'ar' ? 'en' : 'ar', true);
+        });
+
+        document.getElementById('clearCanvasBtn').addEventListener('click', () => {
+          state.nodes = [];
+          state.edges = [];
+          selectedNodeId = null;
+          saveState();
+          renderAll();
+          showToast(state.lang === 'ar' ? 'تم تفريغ اللوحة' : 'Canvas cleared');
+        });
+
+        // Zoom Controls
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+          const rect = viewportEl.getBoundingClientRect();
+          zoomAtPoint(state.viewport.zoom + 0.15, rect.left + rect.width / 2, rect.top + rect.height / 2);
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+          const rect = viewportEl.getBoundingClientRect();
+          zoomAtPoint(state.viewport.zoom - 0.15, rect.left + rect.width / 2, rect.top + rect.height / 2);
+        });
+
+        document.getElementById('zoomLevelDisplay').addEventListener('click', () => {
+          const rect = viewportEl.getBoundingClientRect();
+          zoomAtPoint(1, rect.left + rect.width / 2, rect.top + rect.height / 2);
+        });
+
+        document.getElementById('fitScreenBtn').addEventListener('click', fitAllNodesToScreen);
+
+        // Mouse Wheel Zoom
+        viewportEl.addEventListener(
+          'wheel',
+          (e) => {
+            e.preventDefault();
+            const factor = e.deltaY < 0 ? 1.09 : 0.91;
+            zoomAtPoint(state.viewport.zoom * factor, e.clientX, e.clientY);
+          },
+          { passive: false }
+        );
+
+        // Double-click empty canvas to create a new Story card at cursor
+        viewportEl.addEventListener('dblclick', (e) => {
+          if (e.target === viewportEl || e.target === worldEl || e.target.id === 'connectionsSvg') {
+            const rect = viewportEl.getBoundingClientRect();
+            const wx = (e.clientX - rect.left - state.viewport.panX) / state.viewport.zoom - 145;
+            const wy = (e.clientY - rect.top - state.viewport.panY) / state.viewport.zoom - 60;
+            addNode('story', { x: wx, y: wy });
+          }
+        });
+
+        // Pointer Down on Viewport (Pan, Drag Node, or Start Arrow Connection)
+        viewportEl.addEventListener('pointerdown', (e) => {
+          // 1. Check if user grabbed a Connection Port
+          const portEl = e.target.closest('.node-port');
+          if (portEl) {
+            e.stopPropagation();
+            connectingFrom = {
+              nodeId: portEl.getAttribute('data-node'),
+              port: portEl.getAttribute('data-port')
+            };
+            viewportEl.classList.add('connecting-mode');
+            const draftPath = document.getElementById('draftConnectionPath');
+            draftPath.style.display = 'block';
+            return;
+          }
+
+          // 2. Check if user grabbed a Node Drag Handle
+          const handleEl = e.target.closest('[data-drag-handle]');
+          if (handleEl && !e.target.closest('button')) {
+            e.stopPropagation();
+            const nodeId = handleEl.getAttribute('data-drag-handle');
+            const nodeObj = state.nodes.find((n) => n.id === nodeId);
+            if (!nodeObj) return;
+
+            selectedNodeId = nodeId;
+            draggingNode = nodeObj;
+
+            const rect = viewportEl.getBoundingClientRect();
+            const mouseWorldX = (e.clientX - rect.left - state.viewport.panX) / state.viewport.zoom;
+            const mouseWorldY = (e.clientY - rect.top - state.viewport.panY) / state.viewport.zoom;
+
+            dragOffset.x = mouseWorldX - nodeObj.x;
+            dragOffset.y = mouseWorldY - nodeObj.y;
+
+            document.querySelectorAll('.canvas-node').forEach((el) => {
+              el.classList.toggle('selected', el.getAttribute('data-id') === nodeId);
+            });
+            return;
+          }
+
+          // 3. Select node when clicking inside it
+          const cardEl = e.target.closest('.canvas-node');
+          if (cardEl) {
+            const id = cardEl.getAttribute('data-id');
+            if (selectedNodeId !== id) {
+              selectedNodeId = id;
+              document.querySelectorAll('.canvas-node').forEach((el) => {
+                el.classList.toggle('selected', el.getAttribute('data-id') === id);
+              });
+            }
+            return;
+          }
+
+          // 4. Otherwise, pan the infinite canvas background
+          if (e.target === viewportEl || e.target === worldEl || e.target.id === 'connectionsSvg') {
+            selectedNodeId = null;
+            document.querySelectorAll('.canvas-node.selected').forEach((el) => el.classList.remove('selected'));
+            isPanning = true;
+            panStart.x = e.clientX - state.viewport.panX;
+            panStart.y = e.clientY - state.viewport.panY;
+            viewportEl.classList.add('panning');
+          }
+        });
+
+        // Global Pointer Move
+        window.addEventListener('pointermove', (e) => {
+          // A. Panning Canvas
+          if (isPanning) {
+            state.viewport.panX = e.clientX - panStart.x;
+            state.viewport.panY = e.clientY - panStart.y;
+            applyViewportTransform();
+            return;
+          }
+
+          // B. Dragging a Node Card
+          if (draggingNode) {
+            const rect = viewportEl.getBoundingClientRect();
+            const mouseWorldX = (e.clientX - rect.left - state.viewport.panX) / state.viewport.zoom;
+            const mouseWorldY = (e.clientY - rect.top - state.viewport.panY) / state.viewport.zoom;
+
+            draggingNode.x = Math.round(mouseWorldX - dragOffset.x);
+            draggingNode.y = Math.round(mouseWorldY - dragOffset.y);
+
+            const cardEl = document.querySelector(`.canvas-node[data-id="${draggingNode.id}"]`);
+            if (cardEl) {
+              cardEl.style.left = `${draggingNode.x}px`;
+              cardEl.style.top = `${draggingNode.y}px`;
+            }
+            renderEdges();
+            return;
+          }
+
+          // C. Drawing Live Draft Arrow
+          if (connectingFrom) {
+            const rect = viewportEl.getBoundingClientRect();
+            const targetWorld = {
+              x: (e.clientX - rect.left - state.viewport.panX) / state.viewport.zoom,
+              y: (e.clientY - rect.top - state.viewport.panY) / state.viewport.zoom
+            };
+            const startWorld = getPortWorldCoords(connectingFrom.nodeId, connectingFrom.port);
+            const { d } = buildBezierPath(startWorld, connectingFrom.port, targetWorld, 'left');
+            document.getElementById('draftConnectionPath').setAttribute('d', d);
+          }
+        });
+
+        // Global Pointer Up
+        window.addEventListener('pointerup', (e) => {
+          if (isPanning) {
+            isPanning = false;
+            viewportEl.classList.remove('panning');
+            saveState();
+          }
+
+          if (draggingNode) {
+            draggingNode = null;
+            saveState();
+          }
+
+          if (connectingFrom) {
+            const draftPath = document.getElementById('draftConnectionPath');
+            draftPath.style.display = 'none';
+            draftPath.setAttribute('d', '');
+            viewportEl.classList.remove('connecting-mode');
+
+            // Check if pointer was released over a target port or target card
+            const targetPortEl = e.target.closest('.node-port');
+            const targetCardEl = e.target.closest('.canvas-node');
+
+            let toNodeId = null;
+            let toPort = 'left';
+
+            if (targetPortEl) {
+              toNodeId = targetPortEl.getAttribute('data-node');
+              toPort = targetPortEl.getAttribute('data-port');
+            } else if (targetCardEl) {
+              toNodeId = targetCardEl.getAttribute('data-id');
+              // Pick opposite port automatically
+              const opposite = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
+              toPort = opposite[connectingFrom.port] || 'left';
+            }
+
+            if (toNodeId && toNodeId !== connectingFrom.nodeId) {
+              const newEdge = {
+                id: uid('edge'),
+                fromNode: connectingFrom.nodeId,
+                fromPort: connectingFrom.port,
+                toNode: toNodeId,
+                toPort: toPort,
+                label: '',
+                style: 'solid'
+              };
+              state.edges.push(newEdge);
+              saveState();
+              renderEdges();
+              openEdgeModal(newEdge.id);
+            }
+
+            connectingFrom = null;
+          }
+        });
+
+        // Nodes Layer Delegation (Inputs, Textareas, Image Uploads, Duplicate, Delete)
+        const nodesLayer = document.getElementById('nodesLayer');
+
+        nodesLayer.addEventListener('input', (e) => {
+          const fieldEl = e.target.closest('[data-field]');
+          if (!fieldEl) return;
+          const id = fieldEl.getAttribute('data-id');
+          const field = fieldEl.getAttribute('data-field');
+          const node = state.nodes.find((n) => n.id === id);
+          if (node) {
+            node[field] = fieldEl.value;
+            saveState();
+          }
+        });
+
+        nodesLayer.addEventListener('change', (e) => {
+          const fieldEl = e.target.closest('select[data-field]');
+          if (!fieldEl) return;
+          const id = fieldEl.getAttribute('data-id');
+          const node = state.nodes.find((n) => n.id === id);
+          if (node) {
+            node.role = fieldEl.value;
+            saveState();
+          }
+        });
+
+        const nodeImageInput = document.getElementById('nodeImageInput');
+        nodesLayer.addEventListener('click', (e) => {
+          // Remove image button
+          const rmImgBtn = e.target.closest('[data-remove-img]');
+          if (rmImgBtn) {
+            e.stopPropagation();
+            const id = rmImgBtn.getAttribute('data-remove-img');
+            const node = state.nodes.find((n) => n.id === id);
+            if (node) {
+              node.imageBase64 = '';
+              saveState();
+              renderNodes();
+              renderEdges();
+            }
+            return;
+          }
+
+          // Upload image trigger
+          const uploadBox = e.target.closest('[data-upload-img]');
+          if (uploadBox) {
+            pendingImageNodeId = uploadBox.getAttribute('data-upload-img');
+            nodeImageInput.value = '';
+            nodeImageInput.click();
+            return;
+          }
+
+          // Duplicate card
+          const dupBtn = e.target.closest('[data-duplicate]');
+          if (dupBtn) {
+            duplicateNode(dupBtn.getAttribute('data-duplicate'));
+            return;
+          }
+
+          // Delete card
+          const delBtn = e.target.closest('[data-delete]');
+          if (delBtn) {
+            deleteNode(delBtn.getAttribute('data-delete'));
+          }
+        });
+
+        nodeImageInput.addEventListener('change', async (e) => {
+          const file = e.target.files?.[0];
+          if (!file || !pendingImageNodeId) return;
+          try {
+            const base64 = await compressImageFile(file);
+            const node = state.nodes.find((n) => n.id === pendingImageNodeId);
+            if (node) {
+              node.imageBase64 = base64;
+              saveState();
+              renderNodes();
+              renderEdges();
+              showToast(state.lang === 'ar' ? 'تم إرفاق الصورة بنجاح' : 'Image attached');
+            }
+          } catch (err) {
+            showToast(state.lang === 'ar' ? 'تعذر تحميل الصورة' : 'Failed to load image');
+          }
+        });
+
+        // Clicking an Arrow or Edge Label opens Edge Editor Modal
+        document.getElementById('edgesGroup').addEventListener('click', (e) => {
+          const grp = e.target.closest('[data-edge-id]');
+          if (grp) {
+            openEdgeModal(grp.getAttribute('data-edge-id'));
+          }
+        });
+
+        document.getElementById('edgeLabelsLayer').addEventListener('click', (e) => {
+          const pill = e.target.closest('[data-edge-id]');
+          if (pill) {
+            openEdgeModal(pill.getAttribute('data-edge-id'));
+          }
+        });
+
+        // Edge Modal Actions
+        document.querySelectorAll('.rel-chip').forEach((chip) => {
+          chip.addEventListener('click', () => {
+            document.getElementById('edgeLabelInput').value = chip.getAttribute('data-rel');
+          });
+        });
+
+        document.getElementById('saveEdgeBtn').addEventListener('click', () => {
+          if (!editingEdgeId) return;
+          const edge = state.edges.find((e) => e.id === editingEdgeId);
+          if (edge) {
+            edge.label = document.getElementById('edgeLabelInput').value.trim();
+            edge.style = document.getElementById('edgeStyleSelect').value;
+            saveState();
+          }
+          closeEdgeModal();
+        });
+
+        document.getElementById('deleteEdgeBtn').addEventListener('click', () => {
+          if (!editingEdgeId) return;
+          state.edges = state.edges.filter((e) => e.id !== editingEdgeId);
+          saveState();
+          closeEdgeModal();
+          showToast(state.lang === 'ar' ? 'تم حذف السهم' : 'Arrow deleted');
+        });
+
+        document.getElementById('closeEdgeModalBtn').addEventListener('click', closeEdgeModal);
+        document.getElementById('cancelEdgeBtn').addEventListener('click', closeEdgeModal);
+        document.getElementById('edgeEditModal').addEventListener('click', (e) => {
+          if (e.target.id === 'edgeEditModal') closeEdgeModal();
+        });
+      }
+
+      /* --------------------------------------------------------------------
+         11. BOOTSTRAP
+         -------------------------------------------------------------------- */
+      window.addEventListener('DOMContentLoaded', () => {
+        initEvents();
+        if (!loadSavedState()) {
+          createSampleMap();
+          saveState();
+        }
+        renderAll();
+      });
+    })();
+  </script>
+</body>
+</html>

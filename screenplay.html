@@ -1,0 +1,3876 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Screenwriting software</title>
+
+  <!-- Google Fonts: Cairo, Tajawal, Amiri, Courier Prime -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cairo:wght@400;600;700;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Tajawal:wght@400;500;700;800&display=swap"
+    rel="stylesheet" />
+
+  <!-- FontAwesome 6 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    /* ==========================================================================
+       1. CSS VARIABLES & THEME DESIGN TOKENS
+       ========================================================================== */
+    :root {
+      --bg-app: #121212;
+      --bg-surface: #1E1E1E;
+      --bg-surface-elevated: #262626;
+      --bg-input: #161616;
+      --border-subtle: #303030;
+      --border-focus: #F59E0B;
+
+      --accent-gold: #F59E0B;
+      --accent-gold-hover: #D97706;
+      --accent-gold-soft: rgba(245, 158, 11, 0.14);
+      --accent-red: #E50914;
+      --accent-red-hover: #B80710;
+      --accent-red-soft: rgba(229, 9, 20, 0.15);
+
+      --text-primary: #E5E5E5;
+      --text-secondary: #A3A3A3;
+      --text-muted: #737373;
+
+      --ui-font: 'Cairo', 'Tajawal', sans-serif;
+      --script-font: 'Courier Prime', 'Amiri', monospace;
+      --script-size: 16px;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.45);
+      --shadow-paper: 0 20px 50px rgba(0, 0, 0, 0.65);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 1. استبدل hidden بـ clip حتى لا تعطل خاصية sticky */
+    html,
+    body {
+      min-height: 100vh;
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      font-family: var(--ui-font);
+      line-height: 1.6;
+      overflow-x: clip;
+      /* بدلاً من hidden */
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 2. اجعل الشريط يلتصق عند top: 0 وارفع z-index ليظهر فوق شريط العنوان */
+    .script-toolbar {
+      position: sticky;
+      top: 0;
+      /* بدلاً من 65px */
+      z-index: 50;
+      /* أعلى من z-index: 40 الخاص بالـ navbar */
+      background: #1B1B1B;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      margin-bottom: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #141414;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333333;
+      border-radius: 99px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-gold);
+    }
+
+    /* Utility Classes */
+    .hidden {
+      display: none !important;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .badge-gold {
+      background: var(--accent-gold-soft);
+      color: var(--accent-gold);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .badge-red {
+      background: var(--accent-red-soft);
+      color: #FF5A65;
+      border: 1px solid rgba(229, 9, 20, 0.35);
+    }
+
+    .badge-blue {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60A5FA;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+    }
+
+    .badge-emerald {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .badge-neutral {
+      background: rgba(163, 163, 163, 0.15);
+      color: #D4D4D4;
+      border: 1px solid rgba(163, 163, 163, 0.3);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-family: var(--ui-font);
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-gold), #D97706);
+      color: #121212;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #FBBF24, var(--accent-gold));
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-cinema {
+      background: linear-gradient(135deg, var(--accent-red), #B80710);
+      color: #FFFFFF;
+      box-shadow: 0 4px 15px rgba(229, 9, 20, 0.25);
+    }
+
+    .btn-cinema:hover {
+      background: linear-gradient(135deg, #F41824, var(--accent-red));
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-subtle);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: transparent;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-primary);
+    }
+
+    .btn-danger {
+      background: rgba(229, 9, 20, 0.12);
+      color: #FF5A65;
+      border-color: rgba(229, 9, 20, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: var(--accent-red);
+      color: #FFF;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.82rem;
+    }
+
+    /* Form Controls */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .form-label span.sub {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+
+    .form-control {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      color: var(--text-primary);
+      font-family: var(--ui-font);
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 95px;
+    }
+
+    /* ==========================================================================
+       2. INSPIRATIONAL FILMSTRIP BANNER
+       ========================================================================== */
+    .quote-banner {
+      background: linear-gradient(90deg, #161616 0%, #1F1B16 50%, #161616 100%);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quote-banner::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--accent-gold), var(--accent-red));
+    }
+
+    .quote-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .quote-icon {
+      color: var(--accent-gold);
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .quote-text-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 0.88rem;
+    }
+
+    .quote-text {
+      color: var(--text-primary);
+      font-style: italic;
+    }
+
+    .quote-author {
+      color: var(--accent-gold);
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+
+    .quote-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+       3. WELCOME / DASHBOARD SCREEN
+       ========================================================================== */
+    .welcome-screen {
+      min-height: calc(100vh - 46px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 36px 20px;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(245, 158, 11, 0.08), transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(229, 9, 20, 0.08), transparent 45%),
+        var(--bg-app);
+      position: relative;
+    }
+
+    .film-sprocket-bar {
+      width: 100%;
+      max-width: 860px;
+      height: 16px;
+      background-image: repeating-linear-gradient(90deg,
+          transparent 0px,
+          transparent 14px,
+          #262626 14px,
+          #262626 26px);
+      border-top: 2px solid #262626;
+      border-bottom: 2px solid #262626;
+      opacity: 0.75;
+      margin: 14px 0;
+    }
+
+    .welcome-card {
+      width: 100%;
+      max-width: 860px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 40px 32px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+      position: relative;
+    }
+
+    .studio-emblem {
+      width: 78px;
+      height: 78px;
+      margin: 0 auto 20px;
+      border-radius: 20px;
+      background: linear-gradient(145deg, #262626, #161616);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: var(--accent-gold);
+      box-shadow: 0 10px 25px rgba(245, 158, 11, 0.15);
+    }
+
+    .welcome-title {
+      font-size: clamp(1.7rem, 3.5vw, 2.5rem);
+      font-weight: 800;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #FFFFFF 30%, var(--accent-gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .welcome-subtitle {
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 30px;
+      font-size: 1rem;
+    }
+
+    .welcome-cta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      margin-top: 10px;
+    }
+
+    .cta-box {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 24px 20px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .cta-box:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-gold);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+    }
+
+    .cta-box.primary-box {
+      background: linear-gradient(160deg, rgba(245, 158, 11, 0.14), rgba(30, 30, 30, 0.95));
+      border-color: rgba(245, 158, 11, 0.45);
+    }
+
+    .cta-box-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-gold);
+    }
+
+    .cta-box.upload-box .cta-box-icon {
+      background: rgba(229, 9, 20, 0.15);
+      color: #FF5A65;
+    }
+
+    .cta-box.resume-box .cta-box-icon {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34D399;
+    }
+
+    .cta-box h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .cta-box p {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       4. WORKSPACE TOP NAVBAR & FOLDER SIDEBAR LAYOUT
+       ========================================================================== */
+    .workspace-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(18, 18, 18, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .nav-brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .clapper-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--accent-gold-soft);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .story-title-input {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: var(--ui-font);
+      font-size: 1.2rem;
+      font-weight: 800;
+      padding: 5px 10px;
+      width: 100%;
+      max-width: 380px;
+      transition: all 0.2s;
+    }
+
+    .story-title-input:hover,
+    .story-title-input:focus {
+      background: var(--bg-surface);
+      border-color: var(--accent-gold);
+      outline: none;
+    }
+
+    .autosave-indicator {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .autosave-indicator.saved i {
+      color: #34D399;
+    }
+
+    .nav-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Workspace Grid */
+    .workspace-container {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      min-height: calc(100vh - 112px);
+    }
+
+    /* Folder Sidebar */
+    .folder-sidebar {
+      background: #161616;
+      border-inline-end: 1px solid var(--border-subtle);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .sidebar-section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      font-weight: 700;
+      padding: 0 12px 10px;
+    }
+
+    .folder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .folder-tab {
+      width: 100%;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      padding: 14px 14px;
+      color: var(--text-secondary);
+      font-family: var(--ui-font);
+      text-align: start;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .folder-tab:hover {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+    }
+
+    .folder-tab.active {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(30, 30, 30, 0.9));
+      border-color: rgba(245, 158, 11, 0.45);
+      color: var(--text-primary);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    }
+
+    .folder-tab.active::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 0;
+      top: 10px;
+      bottom: 10px;
+      width: 4px;
+      border-radius: 4px;
+      background: var(--accent-gold);
+    }
+
+    .folder-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--bg-surface-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      color: var(--accent-gold);
+      flex-shrink: 0;
+    }
+
+    .folder-tab.active .folder-icon {
+      background: var(--accent-gold);
+      color: #121212;
+    }
+
+    .folder-meta {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .folder-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .folder-sub {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .folder-count {
+      background: var(--bg-surface-elevated);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    .folder-tab.active .folder-count {
+      background: rgba(245, 158, 11, 0.25);
+      color: var(--accent-gold);
+    }
+
+    /* Project Stats Mini Box in Sidebar */
+    .project-stats-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .project-stats-card h4 {
+      font-size: 0.84rem;
+      color: var(--accent-gold);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      padding: 6px 0;
+      border-bottom: 1px dashed #2B2B2B;
+      color: var(--text-secondary);
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-row strong {
+      color: var(--text-primary);
+    }
+
+    /* Main Content Area */
+    .workspace-main {
+      padding: 28px 32px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .section-title-block h2 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title-block h2 i {
+      color: var(--accent-gold);
+    }
+
+    .section-title-block p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    /* ==========================================================================
+       5. FOLDER 1: BASIC INFORMATION
+       ========================================================================== */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 0.9fr;
+      gap: 24px;
+    }
+
+    .studio-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-heading {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Genre Pills */
+    .genre-pills-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .genre-pill {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .genre-pill:hover {
+      border-color: var(--accent-gold);
+      color: var(--text-primary);
+    }
+
+    .genre-pill.selected {
+      background: var(--accent-gold-soft);
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+
+    /* Aspect Ratio Monitor Preview */
+    .aspect-preview-stage {
+      background: #111111;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      height: 210px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      margin-top: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .aspect-frame {
+      background: linear-gradient(135deg, #242424, #181818);
+      border: 2px solid var(--accent-gold);
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .aspect-frame::after {
+      content: "REC ●";
+      position: absolute;
+      top: 6px;
+      inset-inline-end: 8px;
+      font-size: 0.65rem;
+      color: var(--accent-red);
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .aspect-frame-label {
+      font-weight: 800;
+      color: var(--accent-gold);
+      font-size: 0.9rem;
+    }
+
+    .aspect-frame-sub {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       6. FOLDER 2: CHARACTERS GALLERY & DOSSIERS
+       ========================================================================== */
+    .characters-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .characters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 20px;
+    }
+
+    .character-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .character-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(245, 158, 11, 0.5);
+      box-shadow: var(--shadow-card);
+    }
+
+    .char-card-header {
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: linear-gradient(180deg, #252525 0%, #1E1E1E 100%);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .char-avatar {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--accent-gold);
+      background: #141414;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+    }
+
+    .char-header-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .char-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .char-meta-line {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .char-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .char-card-body {
+      padding: 16px 18px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.87rem;
+    }
+
+    .char-field-item strong {
+      color: var(--accent-gold);
+      font-size: 0.8rem;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .char-field-item p {
+      color: var(--text-secondary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .char-allies-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 4px;
+    }
+
+    .ally-chip {
+      background: #282828;
+      border: 1px solid #3A3A3A;
+      color: #D4D4D4;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .char-card-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border-subtle);
+      background: #191919;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 54px 24px;
+      background: var(--bg-surface);
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+    }
+
+    .empty-state i {
+      font-size: 2.6rem;
+      color: var(--accent-gold);
+      opacity: 0.75;
+      margin-bottom: 14px;
+    }
+
+    .empty-state h3 {
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    /* ==========================================================================
+       7. FOLDER 3: SCREENPLAY EDITOR & PAPER VIEW
+       ========================================================================== */
+    .script-toolbar {
+      position: sticky;
+      top: 65px;
+      z-index: 30;
+      background: #1B1B1B;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      margin-bottom: 22px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .element-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .elem-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 7px 11px;
+      border-radius: 8px;
+      font-family: var(--ui-font);
+      font-size: 0.81rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .elem-btn:hover {
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+
+    .elem-btn.active-type {
+      background: var(--accent-gold);
+      color: #121212;
+      border-color: var(--accent-gold);
+    }
+
+    .typography-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-select {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-family: var(--ui-font);
+      font-size: 0.82rem;
+    }
+
+    .font-size-stepper {
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .font-size-stepper button {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      padding: 6px 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .font-size-stepper button:hover {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--accent-gold);
+    }
+
+    .font-size-stepper span {
+      padding: 0 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+    }
+
+    /* Quick Scene & Character Helper Strip */
+    .quick-helpers-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px dashed #2E2E2E;
+      font-size: 0.8rem;
+    }
+
+    .quick-chip {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: var(--accent-gold);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--ui-font);
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+
+    .quick-chip:hover {
+      background: var(--accent-gold);
+      color: #121212;
+    }
+
+    /* A4 Screenplay Paper Container */
+    .paper-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 60px;
+    }
+
+    .script-paper {
+      width: 100%;
+      max-width: 820px;
+      /* Authentic A4 proportional width */
+      min-height: 1050px;
+      background: #1A1A1D;
+      color: #ECECEC;
+      border: 1px solid #323238;
+      border-radius: 6px;
+      padding: 56px 64px;
+      box-shadow: var(--shadow-paper);
+      font-family: var(--script-font);
+      font-size: var(--script-size);
+      transition: background-color 0.25s, color 0.25s;
+      position: relative;
+    }
+
+    /* Classic Light Ivory Paper Mode Toggle */
+    .script-paper.light-paper {
+      background: #FAF8F5;
+      color: #18181B;
+      border-color: #D6D3D1;
+    }
+
+    .script-paper-header {
+      text-align: center;
+      border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+      padding-bottom: 20px;
+      margin-bottom: 28px;
+    }
+
+    .script-paper-header h1 {
+      font-size: 1.5em;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .script-paper-header .written-by {
+      font-size: 0.85em;
+      opacity: 0.75;
+    }
+
+    /* Individual Screenplay Block */
+    .script-block {
+      position: relative;
+      margin-bottom: 14px;
+      border-radius: 6px;
+      transition: background 0.15s;
+      padding: 4px 8px;
+    }
+
+    .script-block:hover,
+    .script-block:focus-within {
+      background: rgba(245, 158, 11, 0.06);
+    }
+
+    .script-paper.light-paper .script-block:hover,
+    .script-paper.light-paper .script-block:focus-within {
+      background: rgba(245, 158, 11, 0.12);
+    }
+
+    .block-controls {
+      position: absolute;
+      top: -12px;
+      inset-inline-end: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #242424;
+      border: 1px solid #3D3D3D;
+      border-radius: 6px;
+      padding: 2px 6px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 5;
+      font-family: var(--ui-font);
+    }
+
+    .script-block:hover .block-controls,
+    .script-block:focus-within .block-controls {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .block-ctrl-btn {
+      background: transparent;
+      border: none;
+      color: #B5B5B5;
+      font-size: 0.72rem;
+      padding: 2px 5px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .block-ctrl-btn:hover {
+      color: var(--accent-gold);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .block-ctrl-btn.del:hover {
+      color: #FF5A65;
+    }
+
+    .block-type-tag {
+      font-size: 0.68rem;
+      color: var(--accent-gold);
+      font-weight: 700;
+      padding: 0 4px;
+    }
+
+    .script-textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: 1.55;
+      resize: none;
+      overflow: hidden;
+      display: block;
+    }
+
+    .script-textarea:focus {
+      outline: none;
+    }
+
+    /* Authentic Screenplay Element Formatting Rules */
+    /* 1. Scene Heading */
+    .script-block[data-type="scene"] {
+      margin-top: 24px;
+      margin-bottom: 14px;
+      background: rgba(245, 158, 11, 0.1);
+      border-inline-start: 4px solid var(--accent-gold);
+      padding: 8px 12px;
+    }
+
+    .script-block[data-type="scene"] .script-textarea {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .scene-number-badge {
+      font-family: var(--ui-font);
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      margin-bottom: 2px;
+      display: block;
+    }
+
+    /* 2. Action */
+    .script-block[data-type="action"] .script-textarea {
+      text-align: start;
+      width: 100%;
+    }
+
+    /* 3. Character Name */
+    .script-block[data-type="character"] {
+      margin-top: 18px;
+      margin-bottom: 2px;
+    }
+
+    .script-block[data-type="character"] .script-textarea {
+      text-align: center;
+      font-weight: 700;
+      text-transform: uppercase;
+      width: 60%;
+      margin: 0 auto;
+    }
+
+    /* 4. Parenthetical */
+    .script-block[data-type="parenthetical"] {
+      margin-top: 0;
+      margin-bottom: 4px;
+    }
+
+    .script-block[data-type="parenthetical"] .script-textarea {
+      text-align: center;
+      font-style: italic;
+      opacity: 0.88;
+      width: 52%;
+      margin: 0 auto;
+    }
+
+    /* 5. Dialogue */
+    .script-block[data-type="dialogue"] {
+      margin-top: 0;
+      margin-bottom: 14px;
+    }
+
+    .script-block[data-type="dialogue"] .script-textarea {
+      text-align: center;
+      width: 72%;
+      margin: 0 auto;
+    }
+
+    /* 6. Transition */
+    .script-block[data-type="transition"] {
+      margin-top: 16px;
+      margin-bottom: 16px;
+    }
+
+    .script-block[data-type="transition"] .script-textarea {
+      text-align: end;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--accent-gold);
+    }
+
+    /* ==========================================================================
+       8. MODALS & TOAST NOTIFICATIONS
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-y: auto;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-dialog {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 650px;
+      max-height: calc(100vh - 32px);
+      max-height: calc(100dvh - 32px);
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+      overflow: hidden;
+    }
+
+    .modal-dialog>form {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .modal-dialog.modal-sm {
+      max-width: 460px;
+    }
+
+    .modal-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1A1A1A;
+      flex-shrink: 0;
+    }
+
+    .modal-header h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent-gold);
+    }
+
+    .modal-body {
+      padding: 22px 24px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .modal-body::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+      background: #161616;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+      background: #444444;
+      border-radius: 99px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-gold);
+    }
+
+    .modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border-subtle);
+      background: #1A1A1A;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Image Upload Box inside Character Modal */
+    .avatar-upload-box {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: var(--bg-input);
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    .avatar-preview-circle {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-gold);
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      color: var(--accent-gold);
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+
+    .avatar-preview-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Allies Tag Input */
+    .tags-input-container {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .tags-input-container input {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-family: var(--ui-font);
+      font-size: 0.9rem;
+      flex: 1;
+      min-width: 120px;
+      padding: 4px;
+    }
+
+    .tags-input-container input:focus {
+      outline: none;
+    }
+
+    .removable-tag {
+      background: var(--accent-gold-soft);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: var(--accent-gold);
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .removable-tag button {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    /* Toast Container */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      inset-inline-end: 24px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #222222;
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      border-inline-start: 4px solid var(--accent-gold);
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      pointer-events: auto;
+      animation: slideIn 0.25s ease;
+    }
+
+    .toast.success {
+      border-inline-start-color: #10B981;
+    }
+
+    .toast.error {
+      border-inline-start-color: var(--accent-red);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(15px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* ==========================================================================
+       9. RESPONSIVE DESIGN & PRINT STYLESHEET
+       ========================================================================== */
+    @media (max-width: 960px) {
+      .workspace-container {
+        grid-template-columns: 1fr;
+      }
+
+      .folder-sidebar {
+        border-inline-end: none;
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 14px 16px;
+      }
+
+      .folder-list {
+        flex-direction: row;
+        overflow-x: auto;
+      }
+
+      .folder-tab {
+        min-width: 190px;
+      }
+
+      .project-stats-card {
+        display: none;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .workspace-main {
+        padding: 18px 14px;
+      }
+
+      .script-paper {
+        padding: 32px 20px;
+      }
+
+      .script-block[data-type="dialogue"] .script-textarea,
+      .script-block[data-type="character"] .script-textarea,
+      .script-block[data-type="parenthetical"] .script-textarea {
+        width: 92%;
+      }
+
+      .form-row-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .quote-banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media print {
+      body {
+        background: #FFFFFF !important;
+        color: #000000 !important;
+      }
+
+      .quote-banner,
+      .workspace-navbar,
+      .folder-sidebar,
+      .section-header,
+      .script-toolbar,
+      .block-controls,
+      .toast-container {
+        display: none !important;
+      }
+
+      .workspace-container,
+      .workspace-main,
+      .paper-stage {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+      }
+
+      .script-paper {
+        background: #FFFFFF !important;
+        color: #000000 !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 20px !important;
+        max-width: 100% !important;
+      }
+
+      .script-block[data-type="scene"] {
+        background: #F3F4F6 !important;
+        border-inline-start: 3px solid #000 !important;
+      }
+
+      .scene-number-badge {
+        color: #000 !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Hidden File Input for Project JSON Upload -->
+  <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" />
+
+  <!-- ========================================================================
+       TOP INSPIRATIONAL QUOTE BANNER
+       ======================================================================== -->
+  <header class="quote-banner" id="quoteBanner">
+    <div class="quote-content" id="quoteContent">
+      <i class="fa-solid fa-clapperboard quote-icon"></i>
+      <div class="quote-text-wrap">
+        <span class="quote-text" id="quoteText">"إذا أردت أن تصنع فيلماً عظيماً، ابدأ بكتابة قصة لا يستطيع أحد غيرك
+          روايتها."</span>
+        <span class="quote-author" id="quoteAuthor">— كوينتن تارانتينو (Quentin Tarantino)</span>
+      </div>
+    </div>
+    <div class="quote-actions">
+      <button class="btn btn-ghost btn-sm" id="nextQuoteBtn" title="اقتباس ملهم آخر / Next Quote">
+        <i class="fa-solid fa-rotate"></i>
+      </button>
+      <button class="btn btn-secondary btn-sm" id="globalLangToggle"
+        title="تغيير اتجاه الواجهة واللغة / Toggle RTL/LTR">
+        <i class="fa-solid fa-language"></i>
+        <span id="langToggleLabel">EN / LTR</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       VIEW 1: WELCOME / DASHBOARD SCREEN
+       ======================================================================== -->
+  <main id="welcomeScreen" class="welcome-screen">
+    <div class="film-sprocket-bar"></div>
+
+    <section class="welcome-card">
+      <div class="studio-emblem">
+        <i class="fa-solid fa-film"></i>
+      </div>
+      <h1 class="welcome-title" data-i18n="appTitle">Screenwriting software</h1>
+      <p class="welcome-subtitle" data-i18n="appSubtitle">
+        بيئة متكاملة ومظلمة لصنّاع الأفلام وكتّاب السيناريو — طوّر فكرتك، ابنِ ملفات شخصياتك، واكتب السيناريو بمعايير
+        السينما الاحترافية.
+      </p>
+
+      <div class="welcome-cta-grid">
+        <!-- Create New Story -->
+        <div class="cta-box primary-box" id="openNewStoryModalBtn" role="button" tabindex="0">
+          <div class="cta-box-icon">
+            <i class="fa-solid fa-feather-pointed"></i>
+          </div>
+          <h3 data-i18n="createNewStory">إنشاء قصة جديدة</h3>
+          <p data-i18n="createNewStoryDesc">ابدأ مشروع فيلم جديد من الصفر أو باستخدام قالب سينمائي جاهز.</p>
+        </div>
+
+        <!-- Upload JSON Project -->
+        <div class="cta-box upload-box" id="triggerUploadJsonBtn" role="button" tabindex="0">
+          <div class="cta-box-icon">
+            <i class="fa-solid fa-file-import"></i>
+          </div>
+          <h3 data-i18n="uploadProject">رفع مشروع محفوظ (.json)</h3>
+          <p data-i18n="uploadProjectDesc">استعد قصتك، شخصياتك بصورها، والسيناريو الكامل من ملف JSON.</p>
+        </div>
+
+        <!-- Resume Auto-Saved Project (Shown dynamically if localStorage has data) -->
+        <div class="cta-box resume-box hidden" id="resumeBackupBox" role="button" tabindex="0">
+          <div class="cta-box-icon">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <h3 data-i18n="resumeBackup">متابعة آخر مسودة محفوظة</h3>
+          <p id="resumeBackupTitle">مشروع غير مسمى</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="film-sprocket-bar"></div>
+  </main>
+
+  <!-- ========================================================================
+       VIEW 2: WORKSPACE (ACTIVE STORY)
+       ======================================================================== -->
+  <div id="workspaceView" class="hidden">
+    <!-- Persistent Workspace Navbar -->
+    <nav class="workspace-navbar">
+      <div class="nav-brand-group">
+        <div class="clapper-badge">
+          <i class="fa-solid fa-clapperboard"></i>
+        </div>
+        <div style="flex: 1; min-width: 0;">
+          <input type="text" id="workspaceStoryTitle" class="story-title-input" value="عنوان الفيلم"
+            aria-label="Story Title" title="اضغط لتعديل عنوان القصة" />
+          <div class="autosave-indicator saved" id="autosaveIndicator">
+            <i class="fa-solid fa-circle-check"></i>
+            <span data-i18n="autoSaved">محفوظ تلقائياً في المتصفح</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn btn-primary" id="exportJsonBtn">
+          <i class="fa-solid fa-download"></i>
+          <span data-i18n="saveJsonBtn">حفظ المشروع كملف JSON</span>
+        </button>
+
+        <button class="btn btn-secondary" id="workspaceUploadJsonBtn" title="استيراد ملف مشروع آخر">
+          <i class="fa-solid fa-folder-open"></i>
+          <span data-i18n="importBtn">استيراد</span>
+        </button>
+
+        <button class="btn btn-ghost" id="backToHomeBtn">
+          <i class="fa-solid fa-house"></i>
+          <span data-i18n="homeBtn">الرئيسية</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Workspace Split Layout -->
+    <div class="workspace-container">
+      <!-- Left/Right Folder Sidebar -->
+      <aside class="folder-sidebar">
+        <div>
+          <div class="sidebar-section-title" data-i18n="storyFolders">مجلدات القصة</div>
+          <div class="folder-list" role="tablist">
+            <!-- Folder 1 Tab -->
+            <button class="folder-tab active" data-folder="basic" role="tab" aria-selected="true">
+              <div class="folder-icon"><i class="fa-solid fa-folder-open"></i></div>
+              <div class="folder-meta">
+                <span class="folder-name" data-i18n="folder1Title">معلومات أساسية</span>
+                <span class="folder-sub" data-i18n="folder1Sub">الهوية والملخص</span>
+              </div>
+            </button>
+
+            <!-- Folder 2 Tab -->
+            <button class="folder-tab" data-folder="characters" role="tab" aria-selected="false">
+              <div class="folder-icon"><i class="fa-solid fa-users"></i></div>
+              <div class="folder-meta">
+                <span class="folder-name" data-i18n="folder2Title">الشخصيات</span>
+                <span class="folder-sub" data-i18n="folder2Sub">الأبطال والدوافع</span>
+              </div>
+              <span class="folder-count" id="sidebarCharCount">0</span>
+            </button>
+
+
+            <!-- Folder 4 Tab -->
+            <button class="folder-tab" data-folder="screenplay" role="tab" aria-selected="false">
+              <div class="folder-icon"><i class="fa-solid fa-scroll"></i></div>
+              <div class="folder-meta">
+                <span class="folder-name" data-i18n="folder3Title">السيناريو</span>
+                <span class="folder-sub" data-i18n="folder3Sub">المشاهد والحوار</span>
+              </div>
+              <span class="folder-count" id="sidebarSceneCount">0</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Production Summary Card -->
+        <div class="project-stats-card">
+          <h4><i class="fa-solid fa-chart-simple"></i> <span data-i18n="prodStats">إحصائيات الإنتاج</span></h4>
+          <div class="stat-row">
+            <span data-i18n="statScenes">عدد المشاهد:</span>
+            <strong id="statScenesVal">0</strong>
+          </div>
+          <div class="stat-row">
+            <span data-i18n="statCharacters">الشخصيات:</span>
+            <strong id="statCharsVal">0</strong>
+          </div>
+          <div class="stat-row">
+            <span data-i18n="statBlocks">كتل السيناريو:</span>
+            <strong id="statBlocksVal">0</strong>
+          </div>
+          <div class="stat-row">
+            <span data-i18n="statRuntime">المدة التقديرية:</span>
+            <strong id="statRuntimeVal">~0 دقيقة</strong>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Folder Content Views -->
+      <main class="workspace-main">
+
+        <!-- ================================================================
+             FOLDER 1: BASIC INFORMATION (معلومات أساسية)
+             ================================================================ -->
+        <section id="folder-basic" class="folder-panel">
+          <div class="section-header">
+            <div class="section-title-block">
+              <h2><i class="fa-solid fa-film"></i> <span data-i18n="folder1Header">المجلد الأول: المعلومات
+                  الأساسية</span></h2>
+              <p data-i18n="folder1Desc">حدد هوية الفيلم، أبعاد الكادر السينمائي، التصنيف، والفكرة الجوهرية للقصة.</p>
+            </div>
+          </div>
+
+          <div class="info-grid">
+            <!-- Left Column: Core Details -->
+            <div class="studio-card">
+              <div class="card-heading">
+                <i class="fa-solid fa-pen-nib"></i>
+                <span data-i18n="storyIdentity">بيانات العمل والكاتب</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="writerNameInput">
+                  <span data-i18n="writerName">اسم الكاتب / المؤلف</span>
+                </label>
+                <input type="text" id="writerNameInput" class="form-control"
+                  placeholder="مثال: أحمد خالد / Christopher Nolan" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <span data-i18n="filmGenre">نوع الفيلم (Genre)</span>
+                  <span class="sub" data-i18n="multiSelectHint">يمكنك اختيار أكثر من نوع</span>
+                </label>
+                <div class="genre-pills-wrap" id="genrePillsContainer"></div>
+                <input type="text" id="customGenreInput" class="form-control"
+                  placeholder="أو اكتب تصنيفاً مخصصاً واضغط Enter..." />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="loglineInput">
+                  <span data-i18n="loglineLabel">اللوجلاين (Logline - الجملة الترويجية)</span>
+                  <span class="sub" id="loglineCounter">0 / 200 حرف</span>
+                </label>
+                <textarea id="loglineInput" class="form-control" rows="3"
+                  placeholder="لخّص الصراع الرئيسي للبطل في جملة أو جملتين مشوّقتين..."></textarea>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="synopsisInput">
+                  <span data-i18n="synopsisLabel">ملخص القصة الكامل (Synopsis)</span>
+                  <span class="sub" id="synopsisWordCount">0 كلمة</span>
+                </label>
+                <textarea id="synopsisInput" class="form-control" rows="7"
+                  placeholder="اكتب البناء الدرامي للقصة: البداية، نقطة التحول، الذروة، والنهاية..."></textarea>
+              </div>
+            </div>
+
+            <!-- Right Column: Aspect Ratio & Director's Frame -->
+            <div class="studio-card">
+              <div class="card-heading">
+                <i class="fa-solid fa-crop-simple"></i>
+                <span data-i18n="aspectRatioTitle">أبعاد الكادر السينمائي (Aspect Ratio)</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="aspectRatioSelect" data-i18n="selectAspect">اختر نسبة العرض إلى
+                  الارتفاع</label>
+                <select id="aspectRatioSelect" class="form-control">
+                  <option value="16:9">16:9 Widescreen (الشاشة العريضة القياسية)</option>
+                  <option value="2.39:1">2.39:1 Anamorphic CinemaScope (سينما سكوب عريض)</option>
+                  <option value="4:3">4:3 Classic Academy (الكلاسيكي المربع)</option>
+                  <option value="9:16">9:16 Vertical Cinema / Reels (عمودي)</option>
+                  <option value="1:1">1:1 Square Frame (مربع فني)</option>
+                </select>
+              </div>
+
+              <div class="aspect-preview-stage">
+                <div class="aspect-frame" id="aspectPreviewFrame" style="width: 240px; height: 135px;">
+                  <span class="aspect-frame-label" id="aspectFrameText">16:9</span>
+                  <span class="aspect-frame-sub" id="aspectFrameSub">Widescreen</span>
+                </div>
+              </div>
+
+              <div
+                style="margin-top: 18px; padding: 14px; background: var(--bg-input); border-radius: 10px; border: 1px solid var(--border-subtle); font-size: 0.84rem; color: var(--text-secondary);">
+                <strong style="color: var(--accent-gold); display: block; margin-bottom: 4px;">
+                  <i class="fa-solid fa-lightbulb"></i> <span data-i18n="directorTipTitle">ملاحظة إخراجية:</span>
+                </strong>
+                <span id="aspectTipText">نسبة 16:9 مثالية للأفلام الروائية الحديثة ومنصات البث الرقمي.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             FOLDER 2: CHARACTERS (الشخصيات)
+             ================================================================ -->
+        <section id="folder-characters" class="folder-panel hidden">
+          <div class="section-header">
+            <div class="section-title-block">
+              <h2><i class="fa-solid fa-masks-theater"></i> <span data-i18n="folder2Header">المجلد الثاني: ملفات
+                  الشخصيات</span></h2>
+              <p data-i18n="folder2Desc">صمّم أبطال قصتك، خصومهم، خلفياتهم النفسية، وأهدافهم ومصيرهم النهائي.</p>
+            </div>
+            <button class="btn btn-primary" id="openAddCharModalBtn">
+              <i class="fa-solid fa-user-plus"></i>
+              <span data-i18n="addCharacterBtn">إضافة شخصية جديدة</span>
+            </button>
+          </div>
+
+          <div class="characters-toolbar">
+            <div class="filter-pills" id="charFilterPills">
+              <button class="genre-pill selected" data-filter="all" data-i18n="filterAll">الكل</button>
+              <button class="genre-pill" data-filter="main" data-i18n="filterMain">شخصيات أساسية</button>
+              <button class="genre-pill" data-filter="supporting" data-i18n="filterSupporting">شخصيات ثانوية</button>
+              <button class="genre-pill" data-filter="protagonist" data-i18n="filterProtagonist">أبطال</button>
+              <button class="genre-pill" data-filter="antagonist" data-i18n="filterAntagonist">أشرار</button>
+            </div>
+          </div>
+
+          <div id="charactersGrid" class="characters-grid"></div>
+        </section>
+
+        <!-- ================================================================
+             FOLDER 3: SCREENPLAY EDITOR (السيناريو)
+             ================================================================ -->
+        <section id="folder-screenplay" class="folder-panel hidden">
+          <div class="section-header">
+            <div class="section-title-block">
+              <h2><i class="fa-solid fa-scroll"></i> <span data-i18n="folder3Header">المجلد الثالث: محرر السيناريو
+                  السينمائي</span></h2>
+              <p data-i18n="folder3Desc">اكتب المشاهد والحوارات بالتنسيق السينمائي القياسي. اضغط Enter للانتقال التلقائي
+                للعنصر التالي.</p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn btn-secondary btn-sm" id="togglePaperThemeBtn">
+                <i class="fa-solid fa-circle-half-stroke"></i>
+                <span id="paperThemeLabel">ورق أبيض كلاسيكي</span>
+              </button>
+              <button class="btn btn-secondary btn-sm" id="printScriptBtn">
+                <i class="fa-solid fa-print"></i>
+                <span data-i18n="printPdfBtn">طباعة / PDF</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sticky Screenplay Formatting Toolbar -->
+          <div class="script-toolbar">
+            <div class="toolbar-row">
+              <!-- 6 Standard Screenplay Elements -->
+              <div class="element-buttons" id="elementFormatButtons">
+                <button class="elem-btn" data-insert-type="scene" title="إضافة ترويسة مشهد جديدة">
+                  <i class="fa-solid fa-clapperboard"></i> <span data-i18n="elScene">ترويسة مشهد</span>
+                </button>
+                <button class="elem-btn" data-insert-type="action" title="إضافة وصف حركة">
+                  <i class="fa-solid fa-align-justify"></i> <span data-i18n="elAction">وصف حركة</span>
+                </button>
+                <button class="elem-btn" data-insert-type="character" title="إضافة اسم شخصية متحدثة">
+                  <i class="fa-solid fa-user"></i> <span data-i18n="elCharacter">اسم شخصية</span>
+                </button>
+                <button class="elem-btn" data-insert-type="parenthetical" title="إضافة توجيه أدائي بين قوسين">
+                  <i class="fa-solid fa-masks-theater"></i> <span data-i18n="elParenthetical">توجيه أدائي</span>
+                </button>
+                <button class="elem-btn" data-insert-type="dialogue" title="إضافة حوار">
+                  <i class="fa-solid fa-comments"></i> <span data-i18n="elDialogue">حوار</span>
+                </button>
+                <button class="elem-btn" data-insert-type="transition" title="إضافة انتقال بين المشاهد">
+                  <i class="fa-solid fa-scissors"></i> <span data-i18n="elTransition">انتقال</span>
+                </button>
+              </div>
+
+              <!-- Typography Controls -->
+              <div class="typography-controls">
+                <select id="scriptFontSelect" class="mini-select" title="نوع خط السيناريو">
+                  <option value="'Courier Prime', 'Amiri', monospace">Courier Prime + Amiri</option>
+                  <option value="'Amiri', serif">Amiri (خط أميري كلاسيكي)</option>
+                  <option value="'Cairo', sans-serif">Cairo (خط كايرو حديث)</option>
+                  <option value="'Tajawal', sans-serif">Tajawal (خط تجوال)</option>
+                  <option value="'Times New Roman', 'Amiri', serif">Times New Roman</option>
+                </select>
+
+                <div class="font-size-stepper" title="حجم خط السيناريو">
+                  <button type="button" id="decreaseFontBtn">-</button>
+                  <span id="fontSizeDisplay">16px</span>
+                  <button type="button" id="increaseFontBtn">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Scene Templates & Character Picker Strip -->
+            <div class="quick-helpers-bar">
+              <span style="color: var(--text-muted); font-weight: 700;">
+                <i class="fa-solid fa-bolt" style="color: var(--accent-gold);"></i> <span data-i18n="quickInsert">إدراج
+                  سريع:</span>
+              </span>
+              <button type="button" class="quick-chip" data-template="داخلي. [المكان] - نهار">داخلي. [المكان] -
+                نهار</button>
+              <button type="button" class="quick-chip" data-template="خارجي. [المكان] - ليل">خارجي. [المكان] -
+                ليل</button>
+              <button type="button" class="quick-chip" data-template="INT. [LOCATION] - DAY">INT. [LOCATION] -
+                DAY</button>
+              <button type="button" class="quick-chip" data-template="EXT. [LOCATION] - NIGHT">EXT. [LOCATION] -
+                NIGHT</button>
+              <button type="button" class="quick-chip" data-transition="قطع إلى:">قطع إلى:</button>
+              <button type="button" class="quick-chip" data-transition="تلاشي تدريجي:">تلاشي تدريجي:</button>
+
+              <!-- Dynamic Character Picker Dropdown -->
+              <select id="quickCharacterPicker" class="mini-select" style="margin-inline-start: auto;">
+                <option value="">-- اختر شخصية للحوار --</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- A4 Screenplay Paper -->
+          <div class="paper-stage">
+            <article class="script-paper" id="scriptPaper">
+              <div class="script-paper-header">
+                <h1 id="paperStoryTitle">عنوان الفيلم</h1>
+                <div class="written-by" id="paperWrittenBy">تأليف: كاتب غير محدد</div>
+              </div>
+
+              <div id="scriptBlocksContainer"></div>
+
+              <div style="margin-top: 28px; text-align: center;">
+                <button class="btn btn-secondary btn-sm" id="appendBlockBottomBtn">
+                  <i class="fa-solid fa-plus"></i> <span data-i18n="addLineBottom">إضافة سطر جديد في السيناريو</span>
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 1: CREATE NEW STORY MODAL
+       ======================================================================== -->
+  <div id="newStoryModal" class="modal-backdrop hidden">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-clapperboard"></i> <span data-i18n="newStoryModalTitle">مشروع سينمائي جديد</span></h3>
+        <button class="btn btn-ghost btn-sm close-modal-btn" data-close="newStoryModal"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="newStoryForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="newStoryTitleInput" data-i18n="enterStoryTitle">عنوان القصة / الفيلم
+              *</label>
+            <input type="text" id="newStoryTitleInput" class="form-control" required
+              placeholder="مثال: ظل في الإسكندرية" />
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="newStoryTemplateSelect" data-i18n="chooseStartMode">نقطة البداية</label>
+            <select id="newStoryTemplateSelect" class="form-control">
+              <option value="blank">مشروع فارغ (ابدأ من الصفر)</option>
+              <option value="sample">مشروع تجريبي جاهز (يحتوي على شخصيات ومشهد افتتاحي)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost close-modal-btn" data-close="newStoryModal"
+            data-i18n="cancel">إلغاء</button>
+          <button type="submit" class="btn btn-primary" data-i18n="startWriting">بدء الكتابة</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: ADD / EDIT CHARACTER MODAL
+       ======================================================================== -->
+  <div id="characterModal" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-user-pen"></i> <span id="charModalTitle">إضافة شخصية جديدة</span></h3>
+        <button class="btn btn-ghost btn-sm close-modal-btn" data-close="characterModal"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="characterForm">
+        <div class="modal-body">
+          <input type="hidden" id="charIdInput" />
+
+          <!-- Character Avatar Upload (Base64) -->
+          <div class="avatar-upload-box">
+            <div class="avatar-preview-circle" id="charAvatarPreview">
+              <i class="fa-solid fa-user-astronaut"></i>
+            </div>
+            <div style="flex: 1;">
+              <label class="form-label" style="margin-bottom: 4px;" data-i18n="charImageLabel">صورة الشخصية
+                (اختياري)</label>
+              <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 8px;">
+                يتم ضغط الصورة وحفظها تلقائياً داخل ملف المشروع JSON.
+              </p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+                  <i class="fa-solid fa-camera"></i> <span data-i18n="chooseImage">اختيار صورة</span>
+                  <input type="file" id="charImageFileInput" accept="image/*" class="hidden" />
+                </label>
+                <button type="button" class="btn btn-ghost btn-sm hidden" id="removeCharImgBtn">
+                  <i class="fa-solid fa-trash"></i> <span data-i18n="removeImage">إزالة</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="charNameInput" data-i18n="charName">الاسم *</label>
+              <input type="text" id="charNameInput" class="form-control" required placeholder="مثال: المحقق طارق" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="charAgeInput" data-i18n="charAge">السن</label>
+              <input type="text" id="charAgeInput" class="form-control" placeholder="مثال: 38 سنة" />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="charBirthplaceInput" data-i18n="charBirthplace">مكان الميلاد</label>
+              <input type="text" id="charBirthplaceInput" class="form-control" placeholder="مثال: الإسكندرية، مصر" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="charImportanceSelect" data-i18n="charImportance">أهمية الشخصية</label>
+              <select id="charImportanceSelect" class="form-control">
+                <option value="main">شخصية أساسية / Main Character</option>
+                <option value="supporting">شخصية ثانوية / Supporting Character</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="charArchetypeSelect" data-i18n="charArchetype">نوع الدور (Archetype)</label>
+            <select id="charArchetypeSelect" class="form-control">
+              <option value="protagonist">بطل / Protagonist</option>
+              <option value="antagonist">شرير / Antagonist</option>
+              <option value="neutral">محايد / Neutral</option>
+              <option value="mentor">مرشد / Mentor</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="charBackstoryInput" data-i18n="charBackstory">الماضي / الخلفية
+              (Backstory)</label>
+            <textarea id="charBackstoryInput" class="form-control" rows="3"
+              placeholder="ما الذي شكّل شخصية هذا الفرد قبل بداية أحداث الفيلم؟"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="charGoalInput" data-i18n="charGoal">الهدف في القصة (Goal /
+              Motivation)</label>
+            <textarea id="charGoalInput" class="form-control" rows="2"
+              placeholder="ما الذي تسعى الشخصية لتحقيقه بأي ثمن؟"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="charEndingFateInput" data-i18n="charFate">ماذا سيحدث لها بعد نهاية الفيلم؟
+              (Ending Fate)</label>
+            <textarea id="charEndingFateInput" class="form-control" rows="2"
+              placeholder="مصير الشخصية بعد انتهاء الصراع الرئيسي..."></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">
+              <span data-i18n="charAllies">الشخصيات الثانوية التي ستساعدها (Allies)</span>
+              <span class="sub">اكتب الاسم واضغط Enter</span>
+            </label>
+            <div class="tags-input-container" id="alliesTagsContainer">
+              <input type="text" id="allyTagInput" placeholder="أضف اسماً واضغط Enter..." />
+            </div>
+            <div id="existingCharsQuickAllies" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px;"></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost close-modal-btn" data-close="characterModal"
+            data-i18n="cancel">إلغاء</button>
+          <button type="submit" class="btn btn-primary" data-i18n="saveCharacter">حفظ الشخصية</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 3: CHARACTER FULL DOSSIER VIEW MODAL
+       ======================================================================== -->
+  <div id="characterViewModal" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-id-card"></i> <span data-i18n="dossierTitle">ملف الشخصية التفصيلي</span></h3>
+        <button class="btn btn-ghost btn-sm close-modal-btn" data-close="characterViewModal"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="characterDossierBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary close-modal-btn" data-close="characterViewModal"
+          data-i18n="close">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- ========================================================================
+       APPLICATION JAVASCRIPT (VANILLA ES6+)
+       ======================================================================== -->
+  <script>
+    (() => {
+      'use strict';
+
+      /* ----------------------------------------------------------------------
+         1. CONSTANTS, QUOTES & I18N DICTIONARY
+         ---------------------------------------------------------------------- */
+      const STORAGE_KEY = 'directors_cut_autosave_v1';
+
+      const INSPIRATIONAL_QUOTES = [
+        {
+          ar: '«إذا أردت أن تصنع فيلماً عظيماً، ابدأ بكتابة قصة لا يستطيع أحد غيرك روايتها.»',
+          en: '“If you want to make a great film, start by writing a story nobody else could tell.”',
+          author: 'كوينتن تارانتينو — Quentin Tarantino'
+        },
+        {
+          ar: '«الورقة البيضاء هي أعظم مؤثر بصري في تاريخ السينما؛ كل شيء يبدأ من هناك.»',
+          en: '“The blank page is the greatest visual effect in cinema history; everything starts there.”',
+          author: 'كريستوفر نولان — Christopher Nolan'
+        },
+        {
+          ar: '«السينما ليست مجرد صور متحركة، بل هي نبض الإنسان وأسئلته الكبرى.»',
+          en: '“Cinema is not merely moving images; it is the human pulse and its greatest questions.”',
+          author: 'يوسف شاهين — Youssef Chahine'
+        },
+        {
+          ar: '«الأفلام تُصنع في غرفة الكتابة أولاً؛ المخرج الجيد يحمي روح النص.»',
+          en: '“Films are made in the writing room first; a good director protects the soul of the script.”',
+          author: 'هاياو ميازاكي — Hayao Miyazaki'
+        },
+        {
+          ar: '«مع السيناريو الجيد، يمكن لمخرج جيد أن يصنع تحفة فنية. أما مع نص ضعيف، فلا معجزة تنقذه.»',
+          en: '“With a good script, a good director can produce a masterpiece. With a bad script, no miracle saves it.”',
+          author: 'أكيرا كوروساوا — Akira Kurosawa'
+        }
+      ];
+
+      const AVAILABLE_GENRES = [
+        { id: 'Drama', labelAr: 'دراما', labelEn: 'Drama' },
+        { id: 'Sci-Fi', labelAr: 'خيال علمي', labelEn: 'Sci-Fi' },
+        { id: 'Thriller', labelAr: 'إثارة وتشويق', labelEn: 'Thriller' },
+        { id: 'Mystery', labelAr: 'غموض', labelEn: 'Mystery' },
+        { id: 'Comedy', labelAr: 'كوميديا', labelEn: 'Comedy' },
+        { id: 'Action', labelAr: 'أكشن', labelEn: 'Action' },
+        { id: 'Horror', labelAr: 'رعب', labelEn: 'Horror' },
+        { id: 'Romance', labelAr: 'رومانسي', labelEn: 'Romance' },
+        { id: 'Documentary', labelAr: 'وثائقي', labelEn: 'Documentary' }
+      ];
+
+      const ASPECT_META = {
+        '16:9': { w: 256, h: 144, sub: 'Widescreen HD / 4K', tipAr: 'نسبة 16:9 هي المعيار القياسي للأفلام المعاصرة ومنصات البث الرقمي.', tipEn: '16:9 is the modern standard for feature films and streaming platforms.' },
+        '2.39:1': { w: 286, h: 120, sub: 'Anamorphic CinemaScope', tipAr: 'نسبة 2.39:1 تمنح إحساساً ملحمياً عريضاً يناسب أفلام الخيال العلمي والدراما الكبرى.', tipEn: '2.39:1 delivers an epic widescreen feel ideal for sci-fi and grand cinema.' },
+        '4:3': { w: 200, h: 150, sub: 'Classic Academy', tipAr: 'نسبة 4:3 تخلق حميمية نفسية وتركيزاً عالياً على وجوه الشخصيات.', tipEn: '4:3 creates psychological intimacy and tight focus on character faces.' },
+        '9:16': { w: 108, h: 192, sub: 'Vertical Cinema', tipAr: 'نسبة 9:16 مخصصة للأفلام القصيرة العمودية والمنصات المحمولة.', tipEn: '9:16 is tailored for vertical short films and mobile-first storytelling.' },
+        '1:1': { w: 165, h: 165, sub: 'Square Art Frame', tipAr: 'نسبة 1:1 إطار فني متماثل يلفت الانتباه للتكوين الهندسي للصورة.', tipEn: '1:1 is a symmetrical artistic frame emphasizing geometric composition.' }
+      };
+
+      const I18N = {
+        ar: {
+          appTitle: "Screenwriting software",
+          appSubtitle: 'بيئة متكاملة ومظلمة لصنّاع الأفلام وكتّاب السيناريو — طوّر فكرتك، ابنِ ملفات شخصياتك، واكتب السيناريو بمعايير السينما الاحترافية.',
+          createNewStory: 'إنشاء قصة جديدة',
+          createNewStoryDesc: 'ابدأ مشروع فيلم جديد من الصفر أو باستخدام قالب سينمائي جاهز.',
+          uploadProject: 'رفع مشروع محفوظ (.json)',
+          uploadProjectDesc: 'استعد قصتك، شخصياتك بصورها، والسيناريو الكامل من ملف JSON.',
+          resumeBackup: 'متابعة آخر مسودة محفوظة',
+          autoSaved: 'محفوظ تلقائياً في المتصفح',
+          saveJsonBtn: 'حفظ المشروع كملف JSON',
+          importBtn: 'استيراد',
+          homeBtn: 'الرئيسية',
+          storyFolders: 'مجلدات القصة',
+          folder1Title: 'معلومات أساسية',
+          folder1Sub: 'الهوية والملخص',
+          folder2Title: 'الشخصيات',
+          folder2Sub: 'الأبطال والدوافع',
+          folder3Title: 'السيناريو',
+          folder3Sub: 'المشاهد والحوار',
+          prodStats: 'إحصائيات الإنتاج',
+          statScenes: 'عدد المشاهد:',
+          statCharacters: 'الشخصيات:',
+          statBlocks: 'كتل السيناريو:',
+          statRuntime: 'المدة التقديرية:',
+          folder1Header: 'المجلد الأول: المعلومات الأساسية',
+          folder1Desc: 'حدد هوية الفيلم، أبعاد الكادر السينمائي، التصنيف، والفكرة الجوهرية للقصة.',
+          storyIdentity: 'بيانات العمل والكاتب',
+          writerName: 'اسم الكاتب / المؤلف',
+          filmGenre: 'نوع الفيلم (Genre)',
+          multiSelectHint: 'يمكنك اختيار أكثر من نوع',
+          loglineLabel: 'اللوجلاين (Logline - الجملة الترويجية)',
+          synopsisLabel: 'ملخص القصة الكامل (Synopsis)',
+          aspectRatioTitle: 'أبعاد الكادر السينمائي (Aspect Ratio)',
+          selectAspect: 'اختر نسبة العرض إلى الارتفاع',
+          directorTipTitle: 'ملاحظة إخراجية:',
+          folder2Header: 'المجلد الثاني: ملفات الشخصيات',
+          folder2Desc: 'صمّم أبطال قصتك، خصومهم، خلفياتهم النفسية، وأهدافهم ومصيرهم النهائي.',
+          addCharacterBtn: 'إضافة شخصية جديدة',
+          filterAll: 'الكل',
+          filterMain: 'شخصيات أساسية',
+          filterSupporting: 'شخصيات ثانوية',
+          filterProtagonist: 'أبطال',
+          filterAntagonist: 'أشرار',
+          folder3Header: 'المجلد الثالث: محرر السيناريو السينمائي',
+          folder3Desc: 'اكتب المشاهد والحوارات بالتنسيق السينمائي القياسي. اضغط Enter للانتقال التلقائي للعنصر التالي.',
+          printPdfBtn: 'طباعة / PDF',
+          elScene: 'ترويسة مشهد',
+          elAction: 'وصف حركة',
+          elCharacter: 'اسم شخصية',
+          elParenthetical: 'توجيه أدائي',
+          elDialogue: 'حوار',
+          elTransition: 'انتقال',
+          quickInsert: 'إدراج سريع:',
+          addLineBottom: 'إضافة سطر جديد في السيناريو',
+          newStoryModalTitle: 'مشروع سينمائي جديد',
+          enterStoryTitle: 'عنوان القصة / الفيلم *',
+          chooseStartMode: 'نقطة البداية',
+          cancel: 'إلغاء',
+          startWriting: 'بدء الكتابة',
+          charImageLabel: 'صورة الشخصية (اختياري)',
+          chooseImage: 'اختيار صورة',
+          removeImage: 'إزالة',
+          charName: 'الاسم *',
+          charAge: 'السن',
+          charBirthplace: 'مكان الميلاد',
+          charImportance: 'أهمية الشخصية',
+          charArchetype: 'نوع الدور (Archetype)',
+          charBackstory: 'الماضي / الخلفية (Backstory)',
+          charGoal: 'الهدف في القصة (Goal / Motivation)',
+          charFate: 'ماذا سيحدث لها بعد نهاية الفيلم؟ (Ending Fate)',
+          charAllies: 'الشخصيات الثانوية التي ستساعدها (Allies)',
+          saveCharacter: 'حفظ الشخصية',
+          dossierTitle: 'ملف الشخصية التفصيلي',
+          close: 'إغلاق'
+        },
+        en: {
+          appTitle: "Screenwriting software",
+          appSubtitle: 'A dark, distraction-free studio for filmmakers and screenwriters — develop your concept, build character dossiers, and write cinema-standard scripts.',
+          createNewStory: 'Create New Story',
+          createNewStoryDesc: 'Start a fresh screenplay from scratch or load a cinematic sample template.',
+          uploadProject: 'Upload Project (.json)',
+          uploadProjectDesc: 'Restore your story, characters with portraits, and complete script from JSON.',
+          resumeBackup: 'Resume Last Auto-Saved Draft',
+          autoSaved: 'Auto-saved in browser',
+          saveJsonBtn: 'Save Project as JSON',
+          importBtn: 'Import',
+          homeBtn: 'Home',
+          storyFolders: 'Story Folders',
+          folder1Title: 'Basic Information',
+          folder1Sub: 'Identity & Synopsis',
+          folder2Title: 'Characters',
+          folder2Sub: 'Cast & Motivations',
+          folder3Title: 'Screenplay',
+          folder3Sub: 'Scenes & Dialogue',
+          prodStats: 'Production Stats',
+          statScenes: 'Scenes:',
+          statCharacters: 'Characters:',
+          statBlocks: 'Script Blocks:',
+          statRuntime: 'Est. Runtime:',
+          folder1Header: 'Folder 1: Basic Information',
+          folder1Desc: 'Define your film identity, cinematic frame aspect ratio, genres, logline, and synopsis.',
+          storyIdentity: 'Work & Writer Identity',
+          writerName: 'Writer / Screenwriter Name',
+          filmGenre: 'Film Genre',
+          multiSelectHint: 'Select one or more genres',
+          loglineLabel: 'Logline (Promotional Hook)',
+          synopsisLabel: 'Full Story Synopsis',
+          aspectRatioTitle: 'Cinematic Aspect Ratio',
+          selectAspect: 'Select Frame Aspect Ratio',
+          directorTipTitle: "Director's Note:",
+          folder2Header: 'Folder 2: Character Dossiers',
+          folder2Desc: 'Craft your protagonists, antagonists, psychological backstories, goals, and ending fates.',
+          addCharacterBtn: 'Add New Character',
+          filterAll: 'All',
+          filterMain: 'Main Characters',
+          filterSupporting: 'Supporting',
+          filterProtagonist: 'Protagonists',
+          filterAntagonist: 'Antagonists',
+          folder3Header: 'Folder 3: Cinema Screenplay Editor',
+          folder3Desc: 'Write scenes and dialogue in standard screenplay format. Press Enter to advance to the next logical element.',
+          printPdfBtn: 'Print / PDF',
+          elScene: 'Scene Heading',
+          elAction: 'Action',
+          elCharacter: 'Character',
+          elParenthetical: 'Parenthetical',
+          elDialogue: 'Dialogue',
+          elTransition: 'Transition',
+          quickInsert: 'Quick Insert:',
+          addLineBottom: 'Add New Line to Screenplay',
+          newStoryModalTitle: 'New Cinema Project',
+          enterStoryTitle: 'Story / Movie Title *',
+          chooseStartMode: 'Starting Point',
+          cancel: 'Cancel',
+          startWriting: 'Start Writing',
+          charImageLabel: 'Character Portrait (Optional)',
+          chooseImage: 'Choose Image',
+          removeImage: 'Remove',
+          charName: 'Name *',
+          charAge: 'Age',
+          charBirthplace: 'Birthplace',
+          charImportance: 'Role Importance',
+          charArchetype: 'Archetype / Alignment',
+          charBackstory: 'Backstory / Past',
+          charGoal: 'Story Goal / Motivation',
+          charFate: 'Ending Fate (After the Movie)',
+          charAllies: 'Supporting Allies',
+          saveCharacter: 'Save Character',
+          dossierTitle: 'Full Character Dossier',
+          close: 'Close'
+        }
+      };
+
+      /* ----------------------------------------------------------------------
+         2. CORE APPLICATION STATE OBJECT
+         ---------------------------------------------------------------------- */
+      function createDefaultProjectState(title = 'فيلم جديد بدون عنوان') {
+        return {
+          title: title,
+          basicInfo: {
+            writerName: '',
+            aspectRatio: '16:9',
+            genres: ['Drama'],
+            logline: '',
+            synopsis: ''
+          },
+          characters: [],
+          scriptBlocks: [
+            { id: generateId(), type: 'scene', text: 'داخلي. مقهى قديم في وسط المدينة - ليل' },
+            { id: generateId(), type: 'action', text: 'تتساقط قطرات المطر على زجاج النافذة. يجلس البطل في زاوية هادئة يراقب الساعة المعلقة على الحائط.' }
+          ],
+          settings: {
+            lang: 'ar',
+            fontFamily: "'Courier Prime', 'Amiri', monospace",
+            fontSize: 16,
+            paperTheme: 'dark'
+          }
+        };
+      }
+
+      function createSampleProjectState(title) {
+        const c1Id = generateId();
+        const c2Id = generateId();
+        return {
+          title: title || 'ظل في الإسكندرية',
+          basicInfo: {
+            writerName: 'طارق المنشاوي',
+            aspectRatio: '2.39:1',
+            genres: ['Mystery', 'Thriller', 'Drama'],
+            logline: 'محقق متقاعد يعثر على شريط سينمائي مفقود من السبعينيات يكشف أن الجريمة التي أنهت مسيرته لم تُغلق أبداً.',
+            synopsis: 'في شتاء الإسكندرية العاصف، يستلم المحقق السابق آدم صندوقاً مجهولاً يحتوي على بكرة فيلم 35 ملم. كل إطار في الفيلم يقوده إلى شبكة من الأسرار القديمة التي تربط عائلته بأشهر مخرج اختفى في ظروف غامضة.'
+          },
+          characters: [
+            {
+              id: c1Id,
+              name: 'آدم الشناوي',
+              age: '44 سنة',
+              birthplace: 'الإسكندرية',
+              importance: 'main',
+              archetype: 'protagonist',
+              backstory: 'ضابط مباحث سابق ترك الخدمة بعد فشل قضية اختفاء كبرى عام 2012.',
+              goal: 'كشف حقيقة الشريط السينمائي وتبرئة اسمه قبل فوات الأوان.',
+              endingFate: 'يقرر إعادة افتتاح دار السينما القديمة وتوثيق الحقيقة للأجيال القادمة.',
+              allies: ['ليلى كمال', 'العم مراد'],
+              imageBase64: ''
+            },
+            {
+              id: c2Id,
+              name: 'ليلى كمال',
+              age: '31 سنة',
+              birthplace: 'القاهرة',
+              importance: 'main',
+              archetype: 'mentor',
+              backstory: 'مرممة أفلام سينمائية تعمل في أرشيف السينما القومي وتملك خبرة نادرة في الأفلام القديمة.',
+              goal: 'مساعدة آدم في فك شفرات الإطارات المحترقة من بكرة الفيلم.',
+              endingFate: 'تصبح مديرة أرشيف الترميم وتكتب كتاباً عن القضية.',
+              allies: ['آدم الشناوي'],
+              imageBase64: ''
+            }
+          ],
+          scriptBlocks: [
+            { id: generateId(), type: 'scene', text: 'داخلي. غرفة ترميم الأفلام - ليل' },
+            { id: generateId(), type: 'action', text: 'ضوء كشاف صغير يسلط على بكرة فيلم 35 ملم مغطاة بالغبار. ليلى تفحص الإطارات بعدسة مكبرة بينما يقف آدم متوتراً خلفها.' },
+            { id: generateId(), type: 'character', text: 'ليلى كمال' },
+            { id: generateId(), type: 'parenthetical', text: '(بدهشة وهي ترفع رأسها)' },
+            { id: generateId(), type: 'dialogue', text: 'هذا الشريط لم يُصوَّر بكاميرا عادية يا آدم... الشخص الواقف في الخلفية هو نفس الشاهد الذي اختفى ليلة الحادث!' },
+            { id: generateId(), type: 'character', text: 'آدم الشناوي' },
+            { id: generateId(), type: 'dialogue', text: 'مستحيل. ملفات القضية أكدت أنه غادر البلاد قبل التصوير بأسبوع.' },
+            { id: generateId(), type: 'transition', text: 'قطع إلى:' }
+          ],
+          settings: {
+            lang: 'ar',
+            fontFamily: "'Courier Prime', 'Amiri', monospace",
+            fontSize: 16,
+            paperTheme: 'dark'
+          }
+        };
+      }
+
+      let projectData = createDefaultProjectState();
+      let activeFolder = 'basic';
+      let currentCharFilter = 'all';
+      let currentModalAllies = [];
+      let currentModalImageBase64 = '';
+      let activeBlockId = null;
+      let quoteIndex = 0;
+
+      /* ----------------------------------------------------------------------
+         3. HELPER UTILITIES
+         ---------------------------------------------------------------------- */
+      function generateId() {
+        return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-film';
+        toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px)';
+          toast.style.transition = 'all 0.25s ease';
+          setTimeout(() => toast.remove(), 260);
+        }, 3000);
+      }
+
+      function saveToLocalStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(projectData));
+          const ind = document.getElementById('autosaveIndicator');
+          if (ind) {
+            ind.classList.add('saved');
+          }
+          updateSidebarStats();
+        } catch (err) {
+          console.warn('LocalStorage backup limit reached:', err);
+        }
+      }
+
+      function loadFromLocalStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object' && parsed.title) {
+            return parsed;
+          }
+        } catch (err) {
+          console.error('Failed to read backup:', err);
+        }
+        return null;
+      }
+
+      /* ----------------------------------------------------------------------
+         4. LANGUAGE & RTL/LTR DIRECTION CONTROLLER
+         ---------------------------------------------------------------------- */
+      function applyLanguage(lang) {
+        projectData.settings.lang = lang;
+        const htmlEl = document.documentElement;
+        htmlEl.setAttribute('lang', lang);
+        htmlEl.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+        const toggleLabel = document.getElementById('langToggleLabel');
+        if (toggleLabel) {
+          toggleLabel.textContent = lang === 'ar' ? 'EN / LTR' : 'عربي / RTL';
+        }
+
+        const dict = I18N[lang] || I18N.ar;
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+          const key = el.getAttribute('data-i18n');
+          if (dict[key]) {
+            el.textContent = dict[key];
+          }
+        });
+
+        renderQuote();
+        renderGenrePills();
+        updateAspectRatioPreview();
+        renderCharactersGallery();
+        renderScriptBlocks();
+      }
+
+      function renderQuote() {
+        const q = INSPIRATIONAL_QUOTES[quoteIndex % INSPIRATIONAL_QUOTES.length];
+        const lang = projectData.settings.lang || 'ar';
+        const qText = document.getElementById('quoteText');
+        const qAuthor = document.getElementById('quoteAuthor');
+        const qContent = document.getElementById('quoteContent');
+
+        qContent.style.opacity = '0.2';
+        setTimeout(() => {
+          qText.textContent = lang === 'ar' ? q.ar : q.en;
+          qAuthor.textContent = `— ${q.author}`;
+          qContent.style.opacity = '1';
+        }, 160);
+      }
+
+      /* ----------------------------------------------------------------------
+         5. VIEW NAVIGATION & PROJECT WORKSPACE HYDRATION
+         ---------------------------------------------------------------------- */
+      function openWorkspaceWithProject(data) {
+        projectData = {
+          title: data.title || 'قصة بدون عنوان',
+          basicInfo: {
+            writerName: data.basicInfo?.writerName || '',
+            aspectRatio: data.basicInfo?.aspectRatio || '16:9',
+            genres: Array.isArray(data.basicInfo?.genres) ? data.basicInfo.genres : [],
+            logline: data.basicInfo?.logline || '',
+            synopsis: data.basicInfo?.synopsis || ''
+          },
+          characters: Array.isArray(data.characters) ? data.characters : [],
+          scriptBlocks: Array.isArray(data.scriptBlocks) && data.scriptBlocks.length > 0
+            ? data.scriptBlocks
+            : [{ id: generateId(), type: 'scene', text: 'داخلي. [المكان] - نهار' }],
+          settings: {
+            lang: data.settings?.lang || document.documentElement.getAttribute('lang') || 'ar',
+            fontFamily: data.settings?.fontFamily || "'Courier Prime', 'Amiri', monospace",
+            fontSize: Number(data.settings?.fontSize) || 16,
+            paperTheme: data.settings?.paperTheme || 'dark'
+          }
+        };
+
+        document.getElementById('welcomeScreen').classList.add('hidden');
+        document.getElementById('workspaceView').classList.remove('hidden');
+
+        // Hydrate Top Navbar & Folder 1
+        document.getElementById('workspaceStoryTitle').value = projectData.title;
+        document.getElementById('writerNameInput').value = projectData.basicInfo.writerName;
+        document.getElementById('aspectRatioSelect').value = projectData.basicInfo.aspectRatio;
+        document.getElementById('loglineInput').value = projectData.basicInfo.logline;
+        document.getElementById('synopsisInput').value = projectData.basicInfo.synopsis;
+
+        // Hydrate Typography & Paper Settings
+        document.getElementById('scriptFontSelect').value = projectData.settings.fontFamily;
+        applyScriptTypography();
+        applyPaperTheme();
+
+        updateTextCounters();
+        updateAspectRatioPreview();
+        renderGenrePills();
+        renderCharactersGallery();
+        updateQuickCharacterPicker();
+        renderScriptBlocks();
+        updateSidebarStats();
+        applyLanguage(projectData.settings.lang);
+        saveToLocalStorage();
+      }
+
+      function switchFolder(folderName) {
+        activeFolder = folderName;
+        document.querySelectorAll('.folder-tab').forEach((tab) => {
+          const isMatch = tab.getAttribute('data-folder') === folderName;
+          tab.classList.toggle('active', isMatch);
+          tab.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+        });
+
+        document.querySelectorAll('.folder-panel').forEach((panel) => {
+          panel.classList.toggle('hidden', panel.id !== `folder-${folderName}`);
+        });
+
+        if (folderName === 'screenplay') {
+          updateQuickCharacterPicker();
+          renderScriptBlocks();
+        }
+      }
+
+      function updateSidebarStats() {
+        const sceneCount = projectData.scriptBlocks.filter((b) => b.type === 'scene').length;
+        const charCount = projectData.characters.length;
+        const blockCount = projectData.scriptBlocks.length;
+        // Rough estimate: ~14 screenplay blocks per page/minute
+        const estMinutes = Math.max(1, Math.round(blockCount / 14));
+
+        document.getElementById('sidebarCharCount').textContent = charCount;
+        document.getElementById('sidebarSceneCount').textContent = sceneCount;
+        document.getElementById('statScenesVal').textContent = sceneCount;
+        document.getElementById('statCharsVal').textContent = charCount;
+        document.getElementById('statBlocksVal').textContent = blockCount;
+        document.getElementById('statRuntimeVal').textContent =
+          projectData.settings.lang === 'ar' ? `~${estMinutes} دقيقة` : `~${estMinutes} min`;
+
+        // Sync paper header
+        document.getElementById('paperStoryTitle').textContent = projectData.title || 'بدون عنوان';
+        const writer = projectData.basicInfo.writerName.trim();
+        document.getElementById('paperWrittenBy').textContent = writer
+          ? (projectData.settings.lang === 'ar' ? `تأليف: ${writer}` : `Written by: ${writer}`)
+          : (projectData.settings.lang === 'ar' ? 'مسودة سيناريو' : 'Screenplay Draft');
+      }
+
+      /* ----------------------------------------------------------------------
+         6. FOLDER 1: BASIC INFORMATION LOGIC
+         ---------------------------------------------------------------------- */
+      function renderGenrePills() {
+        const container = document.getElementById('genrePillsContainer');
+        if (!container) return;
+        const lang = projectData.settings.lang || 'ar';
+        const selected = projectData.basicInfo.genres || [];
+
+        // Combine default genres + any custom genres saved in projectData
+        const allGenres = [...AVAILABLE_GENRES];
+        selected.forEach((g) => {
+          if (!allGenres.some((item) => item.id.toLowerCase() === g.toLowerCase())) {
+            allGenres.push({ id: g, labelAr: g, labelEn: g });
+          }
+        });
+
+        container.innerHTML = allGenres
+          .map((g) => {
+            const isSelected = selected.some((s) => s.toLowerCase() === g.id.toLowerCase());
+            const label = lang === 'ar' ? `${g.labelAr} (${g.labelEn})` : g.labelEn;
+            return `<button type="button" class="genre-pill ${isSelected ? 'selected' : ''}" data-genre="${escapeHtml(g.id)}">${escapeHtml(label)}</button>`;
+          })
+          .join('');
+      }
+
+      function updateAspectRatioPreview() {
+        const ratio = projectData.basicInfo.aspectRatio || '16:9';
+        const meta = ASPECT_META[ratio] || ASPECT_META['16:9'];
+        const frame = document.getElementById('aspectPreviewFrame');
+        const label = document.getElementById('aspectFrameText');
+        const sub = document.getElementById('aspectFrameSub');
+        const tip = document.getElementById('aspectTipText');
+
+        if (frame) {
+          frame.style.width = `${meta.w}px`;
+          frame.style.height = `${meta.h}px`;
+        }
+        if (label) label.textContent = ratio;
+        if (sub) sub.textContent = meta.sub;
+        if (tip) {
+          tip.textContent = projectData.settings.lang === 'ar' ? meta.tipAr : meta.tipEn;
+        }
+      }
+
+      function updateTextCounters() {
+        const loglineVal = projectData.basicInfo.logline || '';
+        const synopsisVal = projectData.basicInfo.synopsis || '';
+        const lang = projectData.settings.lang || 'ar';
+
+        const logCounter = document.getElementById('loglineCounter');
+        logCounter.textContent =
+          lang === 'ar' ? `${loglineVal.length} / 200 حرف` : `${loglineVal.length} / 200 chars`;
+        logCounter.style.color = loglineVal.length > 220 ? '#FF5A65' : 'var(--text-secondary)';
+
+        const words = synopsisVal.trim() ? synopsisVal.trim().split(/\s+/).length : 0;
+        document.getElementById('synopsisWordCount').textContent =
+          lang === 'ar' ? `${words} كلمة` : `${words} words`;
+      }
+
+      /* ----------------------------------------------------------------------
+         7. FOLDER 2: CHARACTERS LOGIC & BASE64 IMAGE COMPRESSION
+         ---------------------------------------------------------------------- */
+      function getArchetypeBadge(archetype, lang) {
+        const map = {
+          protagonist: { cls: 'badge-gold', ar: 'بطل / Protagonist', en: 'Protagonist' },
+          antagonist: { cls: 'badge-red', ar: 'شرير / Antagonist', en: 'Antagonist' },
+          mentor: { cls: 'badge-blue', ar: 'مرشد / Mentor', en: 'Mentor' },
+          neutral: { cls: 'badge-neutral', ar: 'محايد / Neutral', en: 'Neutral' }
+        };
+        const item = map[archetype] || map.neutral;
+        return `<span class="badge ${item.cls}">${lang === 'ar' ? item.ar : item.en}</span>`;
+      }
+
+      function getImportanceBadge(importance, lang) {
+        if (importance === 'main') {
+          return `<span class="badge badge-emerald">${lang === 'ar' ? 'أساسية' : 'Main'}</span>`;
+        }
+        return `<span class="badge badge-neutral">${lang === 'ar' ? 'ثانوية' : 'Supporting'}</span>`;
+      }
+
+      function renderCharactersGallery() {
+        const grid = document.getElementById('charactersGrid');
+        if (!grid) return;
+        const lang = projectData.settings.lang || 'ar';
+
+        const filtered = projectData.characters.filter((c) => {
+          if (currentCharFilter === 'all') return true;
+          if (currentCharFilter === 'main' || currentCharFilter === 'supporting') {
+            return c.importance === currentCharFilter;
+          }
+          return c.archetype === currentCharFilter;
+        });
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+              <i class="fa-solid fa-users-slash"></i>
+              <h3>${lang === 'ar' ? 'لا توجد شخصيات في هذه القائمة بعد' : 'No characters found in this view'}</h3>
+              <p>${lang === 'ar' ? 'اضغط على زر "إضافة شخصية جديدة" لبناء طاقم فيلمك.' : 'Click "Add New Character" to start building your cast.'}</p>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = filtered
+          .map((char) => {
+            const initials = (char.name || '?').trim().slice(0, 2).toUpperCase();
+            const avatarHtml = char.imageBase64
+              ? `<img src="${char.imageBase64}" alt="${escapeHtml(char.name)}" class="char-avatar" />`
+              : `<div class="char-avatar">${escapeHtml(initials)}</div>`;
+
+            const alliesHtml =
+              Array.isArray(char.allies) && char.allies.length > 0
+                ? `<div class="char-allies-tags">${char.allies
+                  .map((a) => `<span class="ally-chip"><i class="fa-solid fa-handshake-angle"></i> ${escapeHtml(a)}</span>`)
+                  .join('')}</div>`
+                : `<span style="color: var(--text-muted); font-size: 0.78rem;">${lang === 'ar' ? 'لا يوجد حلفاء محددون' : 'No allies listed'}</span>`;
+
+            return `
+              <article class="character-card">
+                <div class="char-card-header">
+                  ${avatarHtml}
+                  <div class="char-header-info">
+                    <h3 class="char-name">${escapeHtml(char.name)}</h3>
+                    <div class="char-meta-line">
+                      ${char.age ? `<span><i class="fa-solid fa-hourglass-half"></i> ${escapeHtml(char.age)}</span>` : ''}
+                      ${char.birthplace ? `<span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(char.birthplace)}</span>` : ''}
+                    </div>
+                    <div class="char-badges">
+                      ${getImportanceBadge(char.importance, lang)}
+                      ${getArchetypeBadge(char.archetype, lang)}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="char-card-body">
+                  <div class="char-field-item">
+                    <strong><i class="fa-solid fa-bullseye"></i> ${lang === 'ar' ? 'الهدف في القصة:' : 'Story Goal:'}</strong>
+                    <p>${escapeHtml(char.goal || (lang === 'ar' ? 'لم يُحدد بعد' : 'Not specified yet'))}</p>
+                  </div>
+                  <div class="char-field-item">
+                    <strong><i class="fa-solid fa-book-open"></i> ${lang === 'ar' ? 'الماضي / الخلفية:' : 'Backstory:'}</strong>
+                    <p>${escapeHtml(char.backstory || (lang === 'ar' ? 'لم يُحدد بعد' : 'Not specified yet'))}</p>
+                  </div>
+                  <div class="char-field-item">
+                    <strong><i class="fa-solid fa-users"></i> ${lang === 'ar' ? 'الشخصيات المساعدة:' : 'Supporting Allies:'}</strong>
+                    ${alliesHtml}
+                  </div>
+                </div>
+
+                <div class="char-card-footer">
+                  <button type="button" class="btn btn-secondary btn-sm" data-char-action="view" data-id="${char.id}">
+                    <i class="fa-solid fa-eye"></i> ${lang === 'ar' ? 'التفاصيل' : 'Dossier'}
+                  </button>
+                  <div style="display: flex; gap: 6px;">
+                    <button type="button" class="btn btn-secondary btn-sm" data-char-action="edit" data-id="${char.id}" title="تعديل">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" data-char-action="delete" data-id="${char.id}" title="حذف">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </article>
+            `;
+          })
+          .join('');
+      }
+
+      function openCharacterModal(charToEdit = null) {
+        const modal = document.getElementById('characterModal');
+        const titleEl = document.getElementById('charModalTitle');
+        const lang = projectData.settings.lang || 'ar';
+
+        document.getElementById('characterForm').reset();
+        currentModalAllies = [];
+        currentModalImageBase64 = '';
+
+        if (charToEdit) {
+          titleEl.textContent = lang === 'ar' ? `تعديل شخصية: ${charToEdit.name}` : `Edit: ${charToEdit.name}`;
+          document.getElementById('charIdInput').value = charToEdit.id;
+          document.getElementById('charNameInput').value = charToEdit.name || '';
+          document.getElementById('charAgeInput').value = charToEdit.age || '';
+          document.getElementById('charBirthplaceInput').value = charToEdit.birthplace || '';
+          document.getElementById('charImportanceSelect').value = charToEdit.importance || 'main';
+          document.getElementById('charArchetypeSelect').value = charToEdit.archetype || 'protagonist';
+          document.getElementById('charBackstoryInput').value = charToEdit.backstory || '';
+          document.getElementById('charGoalInput').value = charToEdit.goal || '';
+          document.getElementById('charEndingFateInput').value = charToEdit.endingFate || '';
+          currentModalAllies = Array.isArray(charToEdit.allies) ? [...charToEdit.allies] : [];
+          currentModalImageBase64 = charToEdit.imageBase64 || '';
+        } else {
+          titleEl.textContent = lang === 'ar' ? 'إضافة شخصية جديدة' : 'Add New Character';
+          document.getElementById('charIdInput').value = '';
+        }
+
+        updateModalAvatarPreview();
+        renderModalAlliesTags();
+        renderExistingCharsQuickAllies(charToEdit ? charToEdit.id : null);
+        modal.classList.remove('hidden');
+        const modalBody = modal.querySelector('.modal-body');
+        if (modalBody) modalBody.scrollTop = 0;
+      }
+
+      function updateModalAvatarPreview() {
+        const preview = document.getElementById('charAvatarPreview');
+        const removeBtn = document.getElementById('removeCharImgBtn');
+        if (currentModalImageBase64) {
+          preview.innerHTML = `<img src="${currentModalImageBase64}" alt="Avatar Preview" />`;
+          removeBtn.classList.remove('hidden');
+        } else {
+          preview.innerHTML = `<i class="fa-solid fa-user-astronaut"></i>`;
+          removeBtn.classList.add('hidden');
+        }
+      }
+
+      function compressImageToBase64(file, maxDimension = 360, quality = 0.82) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              let { width, height } = img;
+              if (width > maxDimension || height > maxDimension) {
+                if (width > height) {
+                  height = Math.round((height * maxDimension) / width);
+                  width = maxDimension;
+                } else {
+                  width = Math.round((width * maxDimension) / height);
+                  height = maxDimension;
+                }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function renderModalAlliesTags() {
+        const container = document.getElementById('alliesTagsContainer');
+        const input = document.getElementById('allyTagInput');
+        container.querySelectorAll('.removable-tag').forEach((t) => t.remove());
+
+        currentModalAllies.forEach((ally, idx) => {
+          const tag = document.createElement('span');
+          tag.className = 'removable-tag';
+          tag.innerHTML = `${escapeHtml(ally)} <button type="button" data-remove-ally="${idx}">&times;</button>`;
+          container.insertBefore(tag, input);
+        });
+      }
+
+      function renderExistingCharsQuickAllies(excludeId) {
+        const wrap = document.getElementById('existingCharsQuickAllies');
+        const others = projectData.characters.filter((c) => c.id !== excludeId);
+        if (others.length === 0) {
+          wrap.innerHTML = '';
+          return;
+        }
+        wrap.innerHTML = others
+          .map(
+            (c) =>
+              `<button type="button" class="quick-chip" data-quick-ally="${escapeHtml(c.name)}">+ ${escapeHtml(c.name)}</button>`
+          )
+          .join('');
+      }
+
+      function openCharacterDossier(charId) {
+        const char = projectData.characters.find((c) => c.id === charId);
+        if (!char) return;
+        const lang = projectData.settings.lang || 'ar';
+        const body = document.getElementById('characterDossierBody');
+
+        const avatar = char.imageBase64
+          ? `<img src="${char.imageBase64}" alt="${escapeHtml(char.name)}" style="width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-gold);" />`
+          : `<div style="width: 96px; height: 96px; border-radius: 50%; background: #262626; border: 3px solid var(--accent-gold); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; color: var(--accent-gold);">${escapeHtml((char.name || '?').slice(0, 2))}</div>`;
+
+        body.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle);">
+            ${avatar}
+            <div>
+              <h2 style="font-size: 1.4rem; margin-bottom: 6px;">${escapeHtml(char.name)}</h2>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+                ${getImportanceBadge(char.importance, lang)}
+                ${getArchetypeBadge(char.archetype, lang)}
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                ${char.age ? `<strong>${lang === 'ar' ? 'السن:' : 'Age:'}</strong> ${escapeHtml(char.age)} &nbsp;|&nbsp; ` : ''}
+                ${char.birthplace ? `<strong>${lang === 'ar' ? 'مكان الميلاد:' : 'Birthplace:'}</strong> ${escapeHtml(char.birthplace)}` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <strong style="color: var(--accent-gold);"><i class="fa-solid fa-book-open"></i> ${lang === 'ar' ? 'الماضي / الخلفية:' : 'Backstory:'}</strong>
+            <p style="background: var(--bg-input); padding: 12px; border-radius: 8px; margin-top: 6px; white-space: pre-wrap;">${escapeHtml(char.backstory || '—')}</p>
+          </div>
+
+          <div class="form-group">
+            <strong style="color: var(--accent-gold);"><i class="fa-solid fa-bullseye"></i> ${lang === 'ar' ? 'الهدف في القصة:' : 'Story Goal:'}</strong>
+            <p style="background: var(--bg-input); padding: 12px; border-radius: 8px; margin-top: 6px; white-space: pre-wrap;">${escapeHtml(char.goal || '—')}</p>
+          </div>
+
+          <div class="form-group">
+            <strong style="color: var(--accent-gold);"><i class="fa-solid fa-flag-checkered"></i> ${lang === 'ar' ? 'مصير الشخصية بعد نهاية الفيلم:' : 'Ending Fate:'}</strong>
+            <p style="background: var(--bg-input); padding: 12px; border-radius: 8px; margin-top: 6px; white-space: pre-wrap;">${escapeHtml(char.endingFate || '—')}</p>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <strong style="color: var(--accent-gold);"><i class="fa-solid fa-handshake-angle"></i> ${lang === 'ar' ? 'الشخصيات الثانوية المساعدة:' : 'Supporting Allies:'}</strong>
+            <div class="char-allies-tags" style="margin-top: 8px;">
+              ${char.allies && char.allies.length
+            ? char.allies.map((a) => `<span class="ally-chip">${escapeHtml(a)}</span>`).join('')
+            : '<span style="color: var(--text-muted);">—</span>'
+          }
+            </div>
+          </div>
+        `;
+
+        document.getElementById('characterViewModal').classList.remove('hidden');
+      }
+
+      /* ----------------------------------------------------------------------
+         8. FOLDER 3: SCREENPLAY EDITOR LOGIC
+         ---------------------------------------------------------------------- */
+      const ELEMENT_TYPE_LABELS = {
+        scene: { ar: 'ترويسة مشهد', en: 'SCENE HEADING' },
+        action: { ar: 'وصف حركة', en: 'ACTION' },
+        character: { ar: 'شخصية', en: 'CHARACTER' },
+        parenthetical: { ar: 'توجيه أدائي', en: 'PARENTHETICAL' },
+        dialogue: { ar: 'حوار', en: 'DIALOGUE' },
+        transition: { ar: 'انتقال', en: 'TRANSITION' }
+      };
+
+      const ELEMENT_PLACEHOLDERS = {
+        scene: { ar: 'داخلي. [المكان] - نهار', en: 'INT. [LOCATION] - DAY' },
+        action: { ar: 'اكتب وصف المشهد والحركة المرئية هنا...', en: 'Describe the visual action happening on screen...' },
+        character: { ar: 'اسم الشخصية', en: 'CHARACTER NAME' },
+        parenthetical: { ar: '(بهمس / بغضب)', en: '(whispering / angrily)' },
+        dialogue: { ar: 'اكتب نص الحوار هنا...', en: 'Write spoken dialogue here...' },
+        transition: { ar: 'قطع إلى:', en: 'CUT TO:' }
+      };
+
+      // Smart progression when pressing Enter inside a screenplay block
+      const NEXT_LOGICAL_ELEMENT = {
+        scene: 'action',
+        action: 'action',
+        character: 'dialogue',
+        parenthetical: 'dialogue',
+        dialogue: 'character',
+        transition: 'scene'
+      };
+
+      const ELEMENT_CYCLE_ORDER = ['scene', 'action', 'character', 'parenthetical', 'dialogue', 'transition'];
+
+      function applyScriptTypography() {
+        const paper = document.getElementById('scriptPaper');
+        const size = projectData.settings.fontSize || 16;
+        const font = projectData.settings.fontFamily || "'Courier Prime', 'Amiri', monospace";
+
+        paper.style.fontFamily = font;
+        paper.style.fontSize = `${size}px`;
+        document.getElementById('fontSizeDisplay').textContent = `${size}px`;
+        autoResizeAllScriptTextareas();
+      }
+
+      function applyPaperTheme() {
+        const paper = document.getElementById('scriptPaper');
+        const label = document.getElementById('paperThemeLabel');
+        const isLight = projectData.settings.paperTheme === 'light';
+        paper.classList.toggle('light-paper', isLight);
+
+        const lang = projectData.settings.lang || 'ar';
+        if (isLight) {
+          label.textContent = lang === 'ar' ? 'ورق استوديو داكن' : 'Dark Studio Paper';
+        } else {
+          label.textContent = lang === 'ar' ? 'ورق أبيض كلاسيكي' : 'Classic Light Paper';
+        }
+      }
+
+      function updateQuickCharacterPicker() {
+        const picker = document.getElementById('quickCharacterPicker');
+        if (!picker) return;
+        const lang = projectData.settings.lang || 'ar';
+        const defaultOpt = lang === 'ar' ? '-- إدراج اسم شخصية --' : '-- Insert Character --';
+
+        picker.innerHTML =
+          `<option value="">${defaultOpt}</option>` +
+          projectData.characters
+            .map((c) => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`)
+            .join('');
+      }
+
+      function autoResizeTextarea(textarea) {
+        if (!textarea) return;
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
+      }
+
+      function autoResizeAllScriptTextareas() {
+        document.querySelectorAll('.script-textarea').forEach(autoResizeTextarea);
+      }
+
+      function renderScriptBlocks(focusBlockId = null) {
+        const container = document.getElementById('scriptBlocksContainer');
+        if (!container) return;
+        const lang = projectData.settings.lang || 'ar';
+        let sceneCounter = 0;
+
+        container.innerHTML = projectData.scriptBlocks
+          .map((block, index) => {
+            if (block.type === 'scene') sceneCounter++;
+            const typeLabel = ELEMENT_TYPE_LABELS[block.type]?.[lang] || block.type;
+            const placeholder = ELEMENT_PLACEHOLDERS[block.type]?.[lang] || '';
+
+            const sceneBadgeHtml =
+              block.type === 'scene'
+                ? `<span class="scene-number-badge">${lang === 'ar' ? `مشهد #${sceneCounter}` : `SCENE #${sceneCounter}`}</span>`
+                : '';
+
+            return `
+              <div class="script-block" data-type="${block.type}" data-block-id="${block.id}">
+                <div class="block-controls">
+                  <span class="block-type-tag">${typeLabel}</span>
+                  <button type="button" class="block-ctrl-btn" data-block-action="cycle" data-id="${block.id}" title="تبديل نوع السطر (Tab)">
+                    <i class="fa-solid fa-repeat"></i>
+                  </button>
+                  <button type="button" class="block-ctrl-btn" data-block-action="up" data-id="${block.id}" ${index === 0 ? 'disabled' : ''} title="تحريك لأعلى">
+                    <i class="fa-solid fa-arrow-up"></i>
+                  </button>
+                  <button type="button" class="block-ctrl-btn" data-block-action="down" data-id="${block.id}" ${index === projectData.scriptBlocks.length - 1 ? 'disabled' : ''} title="تحريك لأسفل">
+                    <i class="fa-solid fa-arrow-down"></i>
+                  </button>
+                  <button type="button" class="block-ctrl-btn del" data-block-action="delete" data-id="${block.id}" title="حذف السطر">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+                ${sceneBadgeHtml}
+                <textarea
+                  class="script-textarea"
+                  rows="1"
+                  data-id="${block.id}"
+                  placeholder="${escapeHtml(placeholder)}"
+                >${escapeHtml(block.text)}</textarea>
+              </div>
+            `;
+          })
+          .join('');
+
+        autoResizeAllScriptTextareas();
+        updateSidebarStats();
+
+        if (focusBlockId) {
+          const targetTa = container.querySelector(`.script-textarea[data-id="${focusBlockId}"]`);
+          if (targetTa) {
+            targetTa.focus();
+            const len = targetTa.value.length;
+            targetTa.setSelectionRange(len, len);
+          }
+        }
+      }
+
+      function insertScriptBlock(type, initialText = '', afterBlockId = null) {
+        const newBlock = {
+          id: generateId(),
+          type: type,
+          text: initialText
+        };
+
+        if (afterBlockId) {
+          const idx = projectData.scriptBlocks.findIndex((b) => b.id === afterBlockId);
+          if (idx !== -1) {
+            projectData.scriptBlocks.splice(idx + 1, 0, newBlock);
+          } else {
+            projectData.scriptBlocks.push(newBlock);
+          }
+        } else {
+          projectData.scriptBlocks.push(newBlock);
+        }
+
+        activeBlockId = newBlock.id;
+        saveToLocalStorage();
+        renderScriptBlocks(newBlock.id);
+      }
+
+      function changeBlockType(blockId, newType) {
+        const block = projectData.scriptBlocks.find((b) => b.id === blockId);
+        if (!block) return;
+        block.type = newType;
+        if (newType === 'parenthetical' && block.text && !block.text.startsWith('(')) {
+          block.text = `(${block.text})`;
+        }
+        saveToLocalStorage();
+        renderScriptBlocks(blockId);
+      }
+
+      /* ----------------------------------------------------------------------
+         9. JSON EXPORT & IMPORT HANDLERS
+         ---------------------------------------------------------------------- */
+      function exportProjectAsJson() {
+        const cleanFileName = (projectData.title || 'screenplay_project')
+          .trim()
+          .replace(/[<>:"/\\|?*]+/g, '_')
+          .replace(/\s+/g, '_');
+
+        const jsonStr = JSON.stringify(projectData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${cleanFileName}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        const lang = projectData.settings.lang || 'ar';
+        showToast(lang === 'ar' ? 'تم تصدير وحفظ المشروع كملف JSON بنجاح!' : 'Project exported as JSON successfully!');
+      }
+
+      function handleJsonFileUpload(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            if (!parsed || typeof parsed !== 'object' || !parsed.title) {
+              throw new Error('Invalid screenplay JSON schema');
+            }
+            openWorkspaceWithProject(parsed);
+            const lang = projectData.settings.lang || 'ar';
+            showToast(lang === 'ar' ? `تم تحميل القصة: ${parsed.title}` : `Loaded story: ${parsed.title}`);
+          } catch (err) {
+            const lang = document.documentElement.getAttribute('lang') || 'ar';
+            showToast(
+              lang === 'ar' ? 'ملف JSON غير صالح أو تالف!' : 'Invalid or corrupted JSON project file!',
+              'error'
+            );
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      /* ----------------------------------------------------------------------
+         10. EVENT LISTENERS WIRING
+         ---------------------------------------------------------------------- */
+      function initEventListeners() {
+        // Quote Rotation & Language Toggle
+        document.getElementById('nextQuoteBtn').addEventListener('click', () => {
+          quoteIndex = (quoteIndex + 1) % INSPIRATIONAL_QUOTES.length;
+          renderQuote();
+        });
+
+        document.getElementById('globalLangToggle').addEventListener('click', () => {
+          const nextLang = projectData.settings.lang === 'ar' ? 'en' : 'ar';
+          applyLanguage(nextLang);
+          saveToLocalStorage();
+        });
+
+        // Welcome Screen Buttons
+        document.getElementById('openNewStoryModalBtn').addEventListener('click', () => {
+          document.getElementById('newStoryTitleInput').value = '';
+          document.getElementById('newStoryModal').classList.remove('hidden');
+          setTimeout(() => document.getElementById('newStoryTitleInput').focus(), 50);
+        });
+
+        const fileInput = document.getElementById('jsonFileInput');
+        document.getElementById('triggerUploadJsonBtn').addEventListener('click', () => {
+          fileInput.value = '';
+          fileInput.click();
+        });
+
+        document.getElementById('workspaceUploadJsonBtn').addEventListener('click', () => {
+          fileInput.value = '';
+          fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files[0]) {
+            handleJsonFileUpload(e.target.files[0]);
+          }
+        });
+
+        // Check if localStorage has an existing auto-saved project
+        const savedBackup = loadFromLocalStorage();
+        if (savedBackup) {
+          const resumeBox = document.getElementById('resumeBackupBox');
+          resumeBox.classList.remove('hidden');
+          document.getElementById('resumeBackupTitle').textContent = `«${savedBackup.title}»`;
+          resumeBox.addEventListener('click', () => {
+            openWorkspaceWithProject(savedBackup);
+            showToast(
+              projectData.settings.lang === 'ar' ? 'تمت استعادة المسودة المحفوظة' : 'Restored auto-saved draft'
+            );
+          });
+        }
+
+        // New Story Form Submit
+        document.getElementById('newStoryForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const title = document.getElementById('newStoryTitleInput').value.trim();
+          const mode = document.getElementById('newStoryTemplateSelect').value;
+          if (!title) return;
+
+          document.getElementById('newStoryModal').classList.add('hidden');
+          const newProj = mode === 'sample' ? createSampleProjectState(title) : createDefaultProjectState(title);
+          newProj.settings.lang = document.documentElement.getAttribute('lang') || 'ar';
+          openWorkspaceWithProject(newProj);
+          showToast(
+            newProj.settings.lang === 'ar' ? `تم إنشاء مشروع "${title}"` : `Created project "${title}"`
+          );
+        });
+
+        // Workspace Navbar Actions
+        document.getElementById('workspaceStoryTitle').addEventListener('input', (e) => {
+          projectData.title = e.target.value;
+          saveToLocalStorage();
+        });
+
+        document.getElementById('exportJsonBtn').addEventListener('click', exportProjectAsJson);
+
+        document.getElementById('backToHomeBtn').addEventListener('click', () => {
+          saveToLocalStorage();
+          const backup = loadFromLocalStorage();
+          if (backup) {
+            const resumeBox = document.getElementById('resumeBackupBox');
+            resumeBox.classList.remove('hidden');
+            document.getElementById('resumeBackupTitle').textContent = `«${backup.title}»`;
+          }
+          document.getElementById('workspaceView').classList.add('hidden');
+          document.getElementById('welcomeScreen').classList.remove('hidden');
+        });
+
+        // Folder Navigation Tabs
+        document.querySelectorAll('.folder-tab').forEach((tab) => {
+          tab.addEventListener('click', () => {
+            switchFolder(tab.getAttribute('data-folder'));
+          });
+        });
+
+        // Folder 1: Basic Info Inputs
+        document.getElementById('writerNameInput').addEventListener('input', (e) => {
+          projectData.basicInfo.writerName = e.target.value;
+          saveToLocalStorage();
+        });
+
+        document.getElementById('aspectRatioSelect').addEventListener('change', (e) => {
+          projectData.basicInfo.aspectRatio = e.target.value;
+          updateAspectRatioPreview();
+          saveToLocalStorage();
+        });
+
+        document.getElementById('genrePillsContainer').addEventListener('click', (e) => {
+          const pill = e.target.closest('.genre-pill');
+          if (!pill) return;
+          const genre = pill.getAttribute('data-genre');
+          const list = projectData.basicInfo.genres;
+          const idx = list.findIndex((g) => g.toLowerCase() === genre.toLowerCase());
+          if (idx > -1) {
+            list.splice(idx, 1);
+          } else {
+            list.push(genre);
+          }
+          renderGenrePills();
+          saveToLocalStorage();
+        });
+
+        document.getElementById('customGenreInput').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = e.target.value.trim();
+            if (val && !projectData.basicInfo.genres.some((g) => g.toLowerCase() === val.toLowerCase())) {
+              projectData.basicInfo.genres.push(val);
+              renderGenrePills();
+              saveToLocalStorage();
+            }
+            e.target.value = '';
+          }
+        });
+
+        document.getElementById('loglineInput').addEventListener('input', (e) => {
+          projectData.basicInfo.logline = e.target.value;
+          updateTextCounters();
+          saveToLocalStorage();
+        });
+
+        document.getElementById('synopsisInput').addEventListener('input', (e) => {
+          projectData.basicInfo.synopsis = e.target.value;
+          updateTextCounters();
+          saveToLocalStorage();
+        });
+
+        // Folder 2: Characters Actions
+        document.getElementById('openAddCharModalBtn').addEventListener('click', () => {
+          openCharacterModal(null);
+        });
+
+        document.getElementById('charFilterPills').addEventListener('click', (e) => {
+          const btn = e.target.closest('.genre-pill');
+          if (!btn) return;
+          currentCharFilter = btn.getAttribute('data-filter');
+          document.querySelectorAll('#charFilterPills .genre-pill').forEach((p) => {
+            p.classList.toggle('selected', p === btn);
+          });
+          renderCharactersGallery();
+        });
+
+        document.getElementById('charactersGrid').addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-char-action]');
+          if (!btn) return;
+          const action = btn.getAttribute('data-char-action');
+          const id = btn.getAttribute('data-id');
+          const charObj = projectData.characters.find((c) => c.id === id);
+          if (!charObj) return;
+
+          if (action === 'view') {
+            openCharacterDossier(id);
+          } else if (action === 'edit') {
+            openCharacterModal(charObj);
+          } else if (action === 'delete') {
+            projectData.characters = projectData.characters.filter((c) => c.id !== id);
+            saveToLocalStorage();
+            renderCharactersGallery();
+            updateQuickCharacterPicker();
+            showToast(
+              projectData.settings.lang === 'ar' ? 'تم حذف الشخصية' : 'Character deleted',
+              'info'
+            );
+          }
+        });
+
+        // Character Modal Image Upload & Allies Tags
+        document.getElementById('charImageFileInput').addEventListener('change', async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          try {
+            currentModalImageBase64 = await compressImageToBase64(file);
+            updateModalAvatarPreview();
+          } catch (err) {
+            showToast('تعذر معالجة الصورة', 'error');
+          }
+        });
+
+        document.getElementById('removeCharImgBtn').addEventListener('click', () => {
+          currentModalImageBase64 = '';
+          document.getElementById('charImageFileInput').value = '';
+          updateModalAvatarPreview();
+        });
+
+        document.getElementById('allyTagInput').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = e.target.value.trim();
+            if (val && !currentModalAllies.includes(val)) {
+              currentModalAllies.push(val);
+              renderModalAlliesTags();
+            }
+            e.target.value = '';
+          }
+        });
+
+        document.getElementById('alliesTagsContainer').addEventListener('click', (e) => {
+          const rmBtn = e.target.closest('[data-remove-ally]');
+          if (!rmBtn) return;
+          const idx = Number(rmBtn.getAttribute('data-remove-ally'));
+          currentModalAllies.splice(idx, 1);
+          renderModalAlliesTags();
+        });
+
+        document.getElementById('existingCharsQuickAllies').addEventListener('click', (e) => {
+          const chip = e.target.closest('[data-quick-ally]');
+          if (!chip) return;
+          const name = chip.getAttribute('data-quick-ally');
+          if (!currentModalAllies.includes(name)) {
+            currentModalAllies.push(name);
+            renderModalAlliesTags();
+          }
+        });
+
+        document.getElementById('characterForm').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const existingId = document.getElementById('charIdInput').value;
+          const name = document.getElementById('charNameInput').value.trim();
+          if (!name) return;
+
+          // Flush pending ally text if user forgot to press Enter
+          const pendingAlly = document.getElementById('allyTagInput').value.trim();
+          if (pendingAlly && !currentModalAllies.includes(pendingAlly)) {
+            currentModalAllies.push(pendingAlly);
+          }
+
+          const charPayload = {
+            id: existingId || generateId(),
+            name,
+            age: document.getElementById('charAgeInput').value.trim(),
+            birthplace: document.getElementById('charBirthplaceInput').value.trim(),
+            importance: document.getElementById('charImportanceSelect').value,
+            archetype: document.getElementById('charArchetypeSelect').value,
+            backstory: document.getElementById('charBackstoryInput').value.trim(),
+            goal: document.getElementById('charGoalInput').value.trim(),
+            endingFate: document.getElementById('charEndingFateInput').value.trim(),
+            allies: [...currentModalAllies],
+            imageBase64: currentModalImageBase64
+          };
+
+          if (existingId) {
+            const idx = projectData.characters.findIndex((c) => c.id === existingId);
+            if (idx !== -1) projectData.characters[idx] = charPayload;
+          } else {
+            projectData.characters.push(charPayload);
+          }
+
+          document.getElementById('characterModal').classList.add('hidden');
+          saveToLocalStorage();
+          renderCharactersGallery();
+          updateQuickCharacterPicker();
+          showToast(
+            projectData.settings.lang === 'ar'
+              ? `تم حفظ ملف الشخصية: ${name}`
+              : `Saved character: ${name}`
+          );
+        });
+
+        // Folder 3: Screenplay Toolbar & Editor Events
+        document.getElementById('elementFormatButtons').addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-insert-type]');
+          if (!btn) return;
+          const type = btn.getAttribute('data-insert-type');
+
+          // If an empty block is currently focused, convert its type; otherwise insert new block after it
+          if (activeBlockId) {
+            const currentBlock = projectData.scriptBlocks.find((b) => b.id === activeBlockId);
+            if (currentBlock && currentBlock.text.trim() === '') {
+              changeBlockType(activeBlockId, type);
+              return;
+            }
+          }
+          insertScriptBlock(type, '', activeBlockId);
+        });
+
+        // Quick Scene Templates & Transitions
+        document.querySelector('.quick-helpers-bar').addEventListener('click', (e) => {
+          const tplBtn = e.target.closest('[data-template]');
+          if (tplBtn) {
+            insertScriptBlock('scene', tplBtn.getAttribute('data-template'), activeBlockId);
+            return;
+          }
+          const transBtn = e.target.closest('[data-transition]');
+          if (transBtn) {
+            insertScriptBlock('transition', transBtn.getAttribute('data-transition'), activeBlockId);
+          }
+        });
+
+        // Quick Character Name Insert into Script
+        document.getElementById('quickCharacterPicker').addEventListener('change', (e) => {
+          const charName = e.target.value;
+          if (!charName) return;
+          insertScriptBlock('character', charName, activeBlockId);
+          e.target.value = '';
+        });
+
+        // Typography Controls
+        document.getElementById('scriptFontSelect').addEventListener('change', (e) => {
+          projectData.settings.fontFamily = e.target.value;
+          applyScriptTypography();
+          saveToLocalStorage();
+        });
+
+        document.getElementById('increaseFontBtn').addEventListener('click', () => {
+          if (projectData.settings.fontSize < 24) {
+            projectData.settings.fontSize += 1;
+            applyScriptTypography();
+            saveToLocalStorage();
+          }
+        });
+
+        document.getElementById('decreaseFontBtn').addEventListener('click', () => {
+          if (projectData.settings.fontSize > 12) {
+            projectData.settings.fontSize -= 1;
+            applyScriptTypography();
+            saveToLocalStorage();
+          }
+        });
+
+        document.getElementById('togglePaperThemeBtn').addEventListener('click', () => {
+          projectData.settings.paperTheme =
+            projectData.settings.paperTheme === 'dark' ? 'light' : 'dark';
+          applyPaperTheme();
+          saveToLocalStorage();
+        });
+
+        document.getElementById('printScriptBtn').addEventListener('click', () => {
+          window.print();
+        });
+
+        document.getElementById('appendBlockBottomBtn').addEventListener('click', () => {
+          insertScriptBlock('action', '');
+        });
+
+        // Script Paper Delegation: Typing, Focus, Keyboard Shortcuts, Block Controls
+        const scriptContainer = document.getElementById('scriptBlocksContainer');
+
+        scriptContainer.addEventListener('focusin', (e) => {
+          const ta = e.target.closest('.script-textarea');
+          if (ta) {
+            activeBlockId = ta.getAttribute('data-id');
+          }
+        });
+
+        scriptContainer.addEventListener('input', (e) => {
+          const ta = e.target.closest('.script-textarea');
+          if (!ta) return;
+          const id = ta.getAttribute('data-id');
+          const block = projectData.scriptBlocks.find((b) => b.id === id);
+          if (block) {
+            block.text = ta.value;
+            autoResizeTextarea(ta);
+            saveToLocalStorage();
+          }
+        });
+
+        scriptContainer.addEventListener('keydown', (e) => {
+          const ta = e.target.closest('.script-textarea');
+          if (!ta) return;
+          const id = ta.getAttribute('data-id');
+          const block = projectData.scriptBlocks.find((b) => b.id === id);
+          if (!block) return;
+
+          // Enter (without Shift): create next logical screenplay element
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const nextType = NEXT_LOGICAL_ELEMENT[block.type] || 'action';
+            insertScriptBlock(nextType, '', id);
+          }
+
+          // Tab: cycle current block format type
+          if (e.key === 'Tab') {
+            e.preventDefault();
+            const curIdx = ELEMENT_CYCLE_ORDER.indexOf(block.type);
+            const nextType = ELEMENT_CYCLE_ORDER[(curIdx + 1) % ELEMENT_CYCLE_ORDER.length];
+            changeBlockType(id, nextType);
+          }
+
+          // Backspace on empty block (when > 1 block exists): delete block and focus previous
+          if (e.key === 'Backspace' && ta.value === '' && projectData.scriptBlocks.length > 1) {
+            e.preventDefault();
+            const idx = projectData.scriptBlocks.findIndex((b) => b.id === id);
+            const prevBlock = projectData.scriptBlocks[idx - 1] || projectData.scriptBlocks[idx + 1];
+            projectData.scriptBlocks.splice(idx, 1);
+            saveToLocalStorage();
+            renderScriptBlocks(prevBlock ? prevBlock.id : null);
+          }
+        });
+
+        scriptContainer.addEventListener('click', (e) => {
+          const ctrlBtn = e.target.closest('[data-block-action]');
+          if (!ctrlBtn) return;
+          const action = ctrlBtn.getAttribute('data-block-action');
+          const id = ctrlBtn.getAttribute('data-id');
+          const idx = projectData.scriptBlocks.findIndex((b) => b.id === id);
+          if (idx === -1) return;
+
+          if (action === 'cycle') {
+            const curType = projectData.scriptBlocks[idx].type;
+            const nextType =
+              ELEMENT_CYCLE_ORDER[(ELEMENT_CYCLE_ORDER.indexOf(curType) + 1) % ELEMENT_CYCLE_ORDER.length];
+            changeBlockType(id, nextType);
+          } else if (action === 'up' && idx > 0) {
+            const temp = projectData.scriptBlocks[idx - 1];
+            projectData.scriptBlocks[idx - 1] = projectData.scriptBlocks[idx];
+            projectData.scriptBlocks[idx] = temp;
+            saveToLocalStorage();
+            renderScriptBlocks(id);
+          } else if (action === 'down' && idx < projectData.scriptBlocks.length - 1) {
+            const temp = projectData.scriptBlocks[idx + 1];
+            projectData.scriptBlocks[idx + 1] = projectData.scriptBlocks[idx];
+            projectData.scriptBlocks[idx] = temp;
+            saveToLocalStorage();
+            renderScriptBlocks(id);
+          } else if (action === 'delete') {
+            if (projectData.scriptBlocks.length === 1) {
+              projectData.scriptBlocks[0].text = '';
+              saveToLocalStorage();
+              renderScriptBlocks(id);
+              return;
+            }
+            projectData.scriptBlocks.splice(idx, 1);
+            saveToLocalStorage();
+            renderScriptBlocks();
+          }
+        });
+
+        // Close Modals Buttons & Backdrop Click
+        document.querySelectorAll('.close-modal-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-close');
+            document.getElementById(targetId).classList.add('hidden');
+          });
+        });
+
+        document.querySelectorAll('.modal-backdrop').forEach((backdrop) => {
+          backdrop.addEventListener('click', (e) => {
+            if (e.target === backdrop) {
+              backdrop.classList.add('hidden');
+            }
+          });
+        });
+
+        // Window Resize: recalculate textarea heights
+        window.addEventListener('resize', autoResizeAllScriptTextareas);
+      }
+
+      /* ----------------------------------------------------------------------
+         11. BOOTSTRAP APPLICATION
+         ---------------------------------------------------------------------- */
+      window.addEventListener('DOMContentLoaded', () => {
+        initEventListeners();
+        renderQuote();
+        renderGenrePills();
+        updateAspectRatioPreview();
+
+        // Auto-rotate inspirational quotes every 18 seconds
+        setInterval(() => {
+          quoteIndex = (quoteIndex + 1) % INSPIRATIONAL_QUOTES.length;
+          renderQuote();
+        }, 18000);
+      });
+    })();
+  </script>
+</body>
+
+</html>
